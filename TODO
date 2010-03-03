@@ -1,0 +1,21 @@
+TODO
+~~~~
+
+1. Coding style
+- normal configure and make
+- clean and rewrite code
+
+2. Features
+- add avatars into contact list
+- add user info window
+- add 'new emails' feature
+- change mrim-proto version to 1.4 (more functions)
+- add rtf-messages support
+- add chat support
+- add extra statuses
+- add contacts searching dialog
+- add smiles support
+- add extra-smiles support
+- add 'wake up' feature
+- add sms-sending feature
+
