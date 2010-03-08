@@ -1,6 +1,7 @@
 INSTALL
 ~~~~~~~
 
+0. sudo apt-get install pidgin-dev
 1. make
 2. sudo make install
 
