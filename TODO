@@ -10,7 +10,7 @@ TODO
 - add avatars into contact list
 - add user info window
 - add 'new emails' feature
-- change mrim-proto version to 1.14 (more functions)
+- change proto.h version to 1.22 (more functions)
 - add rtf-messages support
 - add chat support
 - add extra statuses
@@ -19,4 +19,5 @@ TODO
 - add extra-smiles support
 - add 'wake up' feature
 - add sms-sending feature
+- voice (why not? =)
 
