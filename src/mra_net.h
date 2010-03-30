@@ -66,7 +66,8 @@ typedef struct _mra_serv_conn {
     void (*callback_auth_request)(gpointer, char*, char*);                                  // auth request
     void (*callback_typing_notify)(gpointer, char*);                                        // typing notify
     void (*callback_message)(gpointer, char*, char*, char*, time_t, gint);                  // message
-	void (*callback_anketa_info)(gpointer, const char *, mra_anketa_info *);								// anketa info
+	void (*callback_anketa_info)(gpointer, const char *, mra_anketa_info *);                // anketa info
+	void (*callback_mail_notify)(gpointer, u_int);                                          // new mails notify
 } mra_serv_conn;
 
 char *check_p(gpointer, char *, char *, char);
@@ -109,6 +110,7 @@ void mra_net_read_message_offline(gpointer, char *, int);
 void mra_net_read_add_contact_ack(gpointer, char *, int);
 void mra_net_read_auth_ack(gpointer, char *, int);
 void mra_net_read_anketa_info(gpointer, char *, int);
+void mra_net_read_mailbox_status(gpointer, char *, int);
 
 #endif /* _MRA_NET_H_ */
 

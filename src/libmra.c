@@ -330,6 +330,24 @@ void mra_typing_notify_cb(gpointer data, char *from)
 }
 
 /**************************************************************************************************
+    Callback for 'mail_notify' function
+**************************************************************************************************/
+void mra_mail_notify_cb(gpointer data, u_int status)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+	char buff[128];
+    mra_serv_conn *mmp = data;
+
+	if (status < 1)
+		return;
+
+	sprintf(buff, "Dear %s.\nYou have %u unread mail(s) in your mailbox", mmp->acct->username, status);
+	purple_notify_message(mmp->gc, PURPLE_NOTIFY_MSG_INFO, "New Mail", buff, NULL, NULL, NULL);
+
+}
+
+/**************************************************************************************************
     Callback for 'message' function
 **************************************************************************************************/
 void mra_message_cb(gpointer data, char *from, char *message, char *message_rtf, time_t time, gint type)
@@ -435,6 +453,7 @@ void mra_connect_cb(gpointer data, gint source, const gchar *error_message)
     mmp->callback_typing_notify = mra_typing_notify_cb;
     mmp->callback_message       = mra_message_cb;
 	mmp->callback_anketa_info	= mra_anketa_info_cb;
+	mmp->callback_mail_notify	= mra_mail_notify_cb;
 
     // send 'hello' packet
     mra_net_send_hello(mmp);

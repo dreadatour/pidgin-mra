@@ -729,6 +729,10 @@ gboolean mra_net_read_proceed(gpointer data)
 		case MRIM_CS_ANKETA_INFO:
 			// 'anketa info' packet
 			mra_net_read_anketa_info(mmp, answer, head->dlen);
+            break;
+		case MRIM_CS_MAILBOX_STATUS:
+            // 'mailbox_status' packet
+			mra_net_read_mailbox_status(mmp, answer, head->dlen);
 			break;
         default:
             // unknown packet
@@ -1395,3 +1399,22 @@ void mra_net_read_anketa_info(gpointer data, char *answer, int len)
 	g_free(mai.domain);
 	g_free(mai.username);
 }
+
+/**************************************************************************************************
+    Read 'mailbox status' packet
+**************************************************************************************************/
+void mra_net_read_mailbox_status(gpointer data, char *answer, int len)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);
+
+    UNUSED(len);
+
+    mra_serv_conn *mmp = data;
+	u_int status;
+
+    status = *(u_int *) answer;
+    answer += sizeof(u_int);
+
+	mmp->callback_mail_notify(mmp, status);
+}
+

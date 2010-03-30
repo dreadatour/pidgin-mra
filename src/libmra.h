@@ -134,6 +134,7 @@ void mra_auth_request_cb(gpointer, char *, char *);
 void mra_typing_notify_cb(gpointer, char *);
 void mra_message_cb(gpointer, char *, char *, char *, time_t, gint);
 void mra_anketa_info_cb(gpointer, const char *, mra_anketa_info *);
+void mra_mail_notify_cb(gpointer, u_int);
 
 void mra_connect_cb(gpointer, gint, const gchar *);
 int mra_send_im(PurpleConnection *, const char *, const char *, PurpleMessageFlags);
