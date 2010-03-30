@@ -8,8 +8,8 @@ TODO
 2. Features
 - add localization
 - add avatars into contact list
-- add user info window
-- add 'new emails' feature
++ add user info window (done)
++ add 'new emails' feature (done)
 - change proto.h version to 1.22 (more functions)
 - add rtf-messages support
 - add chat support
