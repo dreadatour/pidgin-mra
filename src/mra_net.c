@@ -527,6 +527,63 @@ gboolean mra_net_send_status(mra_serv_conn *mmp, unsigned int status)
 }
 
 /**************************************************************************************************
+    Send 'anketa info' packet
+**************************************************************************************************/
+gboolean mra_net_send_anketa_info(mra_serv_conn *mmp, const char *who) 
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+	char *c;
+	char *user;
+	char *domain;
+	char *user_lps;
+	char *domain_lps;
+
+	int user_len;
+	int domain_len;
+	int param = 0;
+
+    gboolean ret = FALSE;
+    mrim_packet_header_t head;
+
+	if ((c = strchr(who, '@')) == 0)
+		return FALSE;
+
+	user_len = c - who;
+	domain_len = strlen(who) - user_len - 1;
+
+	user = (char *) malloc(user_len + 1);
+	domain = (char *) malloc(domain_len + 1);
+
+	strncpy(user, who, user_len);
+	strncpy(domain, who + user_len + 1, domain_len);
+
+	user[user_len] = 0;
+	domain[domain_len] = 0;
+
+    user_lps = mra_net_mklps(user);
+    domain_lps = mra_net_mklps(domain);
+	
+	free(domain);
+	free(user);
+
+    mra_net_fill_cs_header(&head, mmp->seq++, MRIM_CS_WP_REQUEST, LPSSIZE(user_lps) + LPSSIZE(domain_lps) + 2 * sizeof(param));
+    mra_net_send(mmp, &head,  sizeof(head));
+	param = MRIM_CS_WP_REQUEST_PARAM_USER;
+    mra_net_send(mmp, &param,  sizeof(param));
+    mra_net_send(mmp, user_lps, LPSSIZE(user_lps));
+	param = MRIM_CS_WP_REQUEST_PARAM_DOMAIN;
+    mra_net_send(mmp, &param,  sizeof(param));
+    mra_net_send(mmp, domain_lps,  LPSSIZE(domain_lps));
+	ret = mra_net_send_flush(mmp);
+
+	g_free(user_lps);
+	g_free(domain_lps);
+
+    return ret;
+}
+
+/**************************************************************************************************
     Read data from socket
 **************************************************************************************************/
 void mra_net_read_cb(gpointer data, gint source, PurpleInputCondition cond)
@@ -669,6 +726,10 @@ gboolean mra_net_read_proceed(gpointer data)
             // 'add new user auth request ack' packet
             mra_net_read_auth_ack(mmp, answer, head->dlen);
             break;
+		case MRIM_CS_ANKETA_INFO:
+			// 'anketa info' packet
+			mra_net_read_anketa_info(mmp, answer, head->dlen);
+			break;
         default:
             // unknown packet
             purple_debug_info("mra", "[%s] packet type is unknown\n", __func__);        /* FIXME */
@@ -1220,3 +1281,117 @@ void mra_net_read_auth_ack(gpointer data, char *answer, int len)
     purple_debug_info("mra", "[%s] add contact auth ack received\n", __func__);              /* FIXME */
 }
 
+/**************************************************************************************************
+    Read 'anketa info' packet
+**************************************************************************************************/
+void mra_net_read_anketa_info(gpointer data, char *answer, int len)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);		/* FIXME */
+
+    UNUSED(len);
+
+	int i = 0;
+    mra_serv_conn *mmp = data;
+    u_int status;
+    u_int fields_num;
+    u_int max_rows;
+    u_int server_time;
+	mra_anketa_info mai;
+
+	memset(&mai, 0, sizeof(mai));
+
+    // get status
+    status = *(u_int *) answer;
+    answer += sizeof(status);
+
+    // get fields_num
+    fields_num = *(u_int *) answer;
+    answer += sizeof(fields_num);
+
+    // get max_rows
+    max_rows = *(u_int *) answer;
+    answer += sizeof(max_rows);
+
+    // get server_time
+    server_time = *(u_int *) answer;
+    answer += sizeof(server_time);
+
+	for (i = 0; i < (int) fields_num; i++) {
+		int j;
+		char *key;
+		char *val;
+		char *answer_temp;
+
+		for (j = 0, answer_temp = answer; j < (int) fields_num; j++)
+			answer_temp += LPSSIZE(answer_temp);
+
+		key = cp1251_to_utf8(mra_net_mksz(answer));
+		val = cp1251_to_utf8(mra_net_mksz(answer_temp));
+
+        answer += LPSSIZE(answer);
+
+		if (strcmp(key, "Username") == 0) {
+			mai.username = g_strdup(val);
+
+		} else if (strcmp(key, "Domain") == 0) {
+			mai.domain = g_strdup(val);
+
+		} else if (strcmp(key, "Nickname") == 0) {
+			mai.nickname = g_strdup(val);
+
+		} else if (strcmp(key, "FirstName") == 0) {
+			mai.firstname = g_strdup(val);
+
+		} else if (strcmp(key, "LastName") == 0) {
+			mai.lastname = g_strdup(val);
+
+		} else if (strcmp(key, "Sex") == 0) {
+			mai.sex = atoi(val);
+
+		} else if (strcmp(key, "Birthday") == 0) {
+			mai.birthday = g_strdup(val);
+
+		} else if (strcmp(key, "City_id") == 0) {
+			mai.city_id = atoi(val);
+
+		} else if (strcmp(key, "Location") == 0) {
+			mai.location = g_strdup(val);
+
+		} else if (strcmp(key, "Zodiac") == 0) {
+			mai.zodiak = atoi(val);
+
+		} else if (strcmp(key, "BMonth") == 0) {
+			mai.bmounth = atoi(val);
+
+		} else if (strcmp(key, "BDay") == 0) {
+			mai.bday = atoi(val);
+		
+		} else if (strcmp(key, "Country_id") == 0) {
+			mai.country_id = atoi(val);
+
+		} else if (strcmp(key, "Phone") == 0) {
+			mai.phone = g_strdup(val);
+
+		} else if (strcmp(key, "mrim_status") == 0) {
+
+		} 
+
+		free(key);
+		free(val);
+	}
+
+	char *who = (char *) malloc(strlen(mai.username) + strlen(mai.domain) + 2);
+	sprintf(who, "%s@%s", mai.username, mai.domain);
+
+	mmp->callback_anketa_info(mmp, who, &mai);
+
+	free(who);
+	g_free(mai.phone);
+	g_free(mai.location);
+	g_free(mai.birthday);
+	g_free(mai.lastname);
+	g_free(mai.firstname);
+	g_free(mai.nickname);
+	g_free(mai.domain);
+	g_free(mai.username);
+}

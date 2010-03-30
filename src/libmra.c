@@ -434,6 +434,7 @@ void mra_connect_cb(gpointer data, gint source, const gchar *error_message)
     mmp->callback_auth_request  = mra_auth_request_cb;
     mmp->callback_typing_notify = mra_typing_notify_cb;
     mmp->callback_message       = mra_message_cb;
+	mmp->callback_anketa_info	= mra_anketa_info_cb;
 
     // send 'hello' packet
     mra_net_send_hello(mmp);
@@ -628,6 +629,17 @@ void mra_remove_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *gro
 }
 
 /**************************************************************************************************
+    Get Anleta Info
+**************************************************************************************************/
+void mra_get_anketa(PurpleConnection *gc, const char *who)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+    mra_serv_conn *mmp = gc->proto_data;
+	mra_net_send_anketa_info(mmp, who);
+}
+
+/**************************************************************************************************
     Connect to server
 **************************************************************************************************/
 void mra_login(PurpleAccount *acct)
@@ -768,6 +780,34 @@ void mra_set_status_cb(PurplePluginAction *action)
 }
 
 /**************************************************************************************************
+    Get anketa info
+**************************************************************************************************/
+void mra_anketa_info_cb(gpointer data, const char *who, mra_anketa_info *anketa)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+    mra_serv_conn *mmp = data;
+	PurpleNotifyUserInfo *user_info;
+
+	user_info = purple_notify_user_info_new();
+
+	purple_notify_user_info_add_section_break(user_info);
+	purple_notify_user_info_prepend_pair(user_info, "Phone", anketa->phone);
+	purple_notify_user_info_prepend_pair(user_info, "Location", anketa->location);
+	purple_notify_user_info_prepend_pair(user_info, "Birthday", anketa->birthday);
+	purple_notify_user_info_prepend_pair(user_info, "Sex", ((anketa->sex == 1) ? "Male" : (anketa->sex == 2) ? "Female" : "" ));
+	purple_notify_user_info_prepend_pair(user_info, "Lastname", anketa->lastname);
+	purple_notify_user_info_prepend_pair(user_info, "Firstname", anketa->firstname);
+	purple_notify_user_info_prepend_pair(user_info, "Nickname", anketa->nickname);
+	purple_notify_user_info_prepend_pair(user_info, "Domain", anketa->domain);
+	purple_notify_user_info_prepend_pair(user_info, "Username", anketa->username);
+	purple_notify_user_info_prepend_pair(user_info, "E-Mail", who);
+
+	purple_notify_userinfo(mmp->gc, who, user_info, 0, 0);
+	purple_notify_user_info_destroy(user_info);
+}
+
+/**************************************************************************************************
     Actions to provide additional features
 **************************************************************************************************/
 GList *mra_actions(PurplePlugin *plugin, gpointer context)
@@ -860,7 +900,7 @@ static PurplePluginProtocolInfo prpl_info = {
 	mra_send_im,                                    // send_im
 	mra_set_info,                                   // set_info
 	mra_send_typing,                                // send_typing
-	NULL,                                           // get_info
+	mra_get_anketa,                                 // get_info
 	mra_set_status,                                 // set_status
 	NULL,                                           // set_idle
 	NULL,                                           // change_passwd

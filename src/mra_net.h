@@ -66,6 +66,7 @@ typedef struct _mra_serv_conn {
     void (*callback_auth_request)(gpointer, char*, char*);                                  // auth request
     void (*callback_typing_notify)(gpointer, char*);                                        // typing notify
     void (*callback_message)(gpointer, char*, char*, char*, time_t, gint);                  // message
+	void (*callback_anketa_info)(gpointer, const char *, mra_anketa_info *);								// anketa info
 } mra_serv_conn;
 
 char *check_p(gpointer, char *, char *, char);
@@ -91,6 +92,7 @@ gboolean mra_net_send_authorize_user(mra_serv_conn *, char *);
 gboolean mra_net_send_add_user(mra_serv_conn *, char *, char *, u_int, u_int);
 gboolean mra_net_send_change_user(mra_serv_conn *, unsigned int, unsigned int, char *, char *, unsigned int);
 gboolean mra_net_send_status(mra_serv_conn *, unsigned int);
+gboolean mra_net_send_anketa_info(mra_serv_conn *, const char *);
 
 void mra_net_read_cb(gpointer, gint, PurpleInputCondition);
 gboolean mra_net_read_proceed(gpointer);
@@ -106,6 +108,7 @@ void mra_net_read_message(gpointer, char *, int);
 void mra_net_read_message_offline(gpointer, char *, int);
 void mra_net_read_add_contact_ack(gpointer, char *, int);
 void mra_net_read_auth_ack(gpointer, char *, int);
+void mra_net_read_anketa_info(gpointer, char *, int);
 
 #endif /* _MRA_NET_H_ */
 

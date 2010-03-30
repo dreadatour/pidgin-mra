@@ -62,6 +62,24 @@ typedef struct _mra_user_info {
     char *client_endpoint;
 } mra_user_info;
 
+typedef struct _mra_anketa_info {
+	char *username;
+	char *domain;
+	char *nickname;
+	char *firstname;
+	char *lastname;
+	unsigned short sex;
+	char *birthday;
+	unsigned int city_id;
+	char *location;
+	unsigned short zodiak;
+	unsigned short bmounth;
+	unsigned short bday;
+	unsigned short country_id;
+	char *phone;
+	unsigned short age;
+} mra_anketa_info;
+
 typedef struct _mra_contact {
     u_int id; 
     u_int status;
@@ -115,6 +133,7 @@ void mra_auth_request_cancel_cb(gpointer data);
 void mra_auth_request_cb(gpointer, char *, char *);
 void mra_typing_notify_cb(gpointer, char *);
 void mra_message_cb(gpointer, char *, char *, char *, time_t, gint);
+void mra_anketa_info_cb(gpointer, const char *, mra_anketa_info *);
 
 void mra_connect_cb(gpointer, gint, const gchar *);
 int mra_send_im(PurpleConnection *, const char *, const char *, PurpleMessageFlags);
@@ -126,9 +145,12 @@ void mra_add_buddy(PurpleConnection *, PurpleBuddy *, PurpleGroup *);
 void mra_remove_buddy(PurpleConnection *, PurpleBuddy *, PurpleGroup *);
 void mra_login(PurpleAccount *);
 void mra_close(PurpleConnection *);
+void mra_get_anketa(PurpleConnection *, const char *);
+
 GList *mra_statuses(PurpleAccount *);
 void mra_set_status_cb(PurplePluginAction *);
 GList *mra_actions(PurplePlugin *, gpointer);
+
 gboolean plugin_load(PurplePlugin *);
 gboolean plugin_unload(PurplePlugin *);
 
