@@ -1,1 +1,3 @@
 *.so
+src/tags
+src/*.swp
