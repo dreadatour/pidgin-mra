@@ -19,3 +19,5 @@
     * Fix not email contacts crash (http://github.com/dreadatour/pidgin-mra/issues#issue/2):
     Phone and other strange contacts are skipped.
 
+    * Add 'Rename users' feature (http://github.com/dreadatour/pidgin-mra/issues#issue/6)
+
