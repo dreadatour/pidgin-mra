@@ -632,16 +632,24 @@ void mra_remove_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *gro
     UNUSED(group);
     
     mra_serv_conn *mmp = gc->proto_data;
+    gpointer buddy_user_id;
     unsigned int user_id;
     unsigned int group_id = 0;
     char *email;
     char *name;
-            
+
     email = (char *) purple_buddy_get_name(buddy);
     name  = (char *) purple_buddy_get_alias(buddy);
-    user_id = atol(g_hash_table_lookup(mmp->users, email));
+    buddy_user_id = g_hash_table_lookup(mmp->users, email);
+    if (buddy_user_id == NULL) {
+        purple_debug_info("mra", "[%s] I can't remove user because I can't find user_id!\n", __func__);             
+                                                                                        /* FIXME */
+        return;
+    }
+    user_id = atol(buddy_user_id);
     
-    purple_debug_info("mra", "[%s] Remove user %s (%s), user_id: %d\n", __func__, email, name, user_id);   /* FIXME */
+    purple_debug_info("mra", "[%s] Remove user %s (%s), user_id: %d\n", 
+                      __func__, email, name, user_id);                                  /* FIXME */
 
     mra_net_send_change_user(mmp, user_id, group_id, email, name, CONTACT_FLAG_REMOVED);
 }

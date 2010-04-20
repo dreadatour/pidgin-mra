@@ -1019,19 +1019,23 @@ void mra_net_read_contact_list(gpointer data, char *answer, int len)
                               __func__, name, email, flags, group_id, user_status);     /* FIXME */
 
         // push contact into contact array if contact is active
-        if(!(flags & CONTACT_FLAG_REMOVED))
-        {
-            purple_debug_info("mra", "[%s] is enabled (id: %d)\n", 
-                              __func__, contact_cnt + MAX_GROUP);                       /* FIXME */
-            contacts = (mra_contact *) g_realloc(contacts, (contact_cnt + 1) * sizeof(mra_contact));
-            contacts[contact_cnt].id = contact_cnt + MAX_GROUP;
-            contacts[contact_cnt].email = g_strdup(email);
-            contacts[contact_cnt].nickname = g_strdup(name);
-            contacts[contact_cnt].flags = flags;
-            contacts[contact_cnt].group_id = group_id;
-            contacts[contact_cnt].intflags = intflags;
-            contacts[contact_cnt].status = user_status;
-            contact_cnt++;
+        if(!(flags & CONTACT_FLAG_REMOVED)) {
+            if (strstr(email, "@")) {
+                purple_debug_info("mra", "[%s] is enabled (id: %d)\n", 
+                                  __func__, contact_cnt + MAX_GROUP);                   /* FIXME */
+                contacts = (mra_contact *) g_realloc(contacts, (contact_cnt + 1) * sizeof(mra_contact));
+                contacts[contact_cnt].id = contact_cnt + MAX_GROUP;
+                contacts[contact_cnt].email = g_strdup(email);
+                contacts[contact_cnt].nickname = g_strdup(name);
+                contacts[contact_cnt].flags = flags;
+                contacts[contact_cnt].group_id = group_id;
+                contacts[contact_cnt].intflags = intflags;
+                contacts[contact_cnt].status = user_status;
+                contact_cnt++;
+            } else {
+                purple_debug_info("mra", "[%s] is very strange. we will skip it until we don't know, what to do\n",
+                                  __func__);                                            /* FIXME */
+            }
         }   
         g_free(email);
         g_free(name);

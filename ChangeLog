@@ -16,3 +16,6 @@
     Capital letters are allowed now.
     Email validation is fixed (no more segfault now).
 
+    * Fix not email contacts crash (http://github.com/dreadatour/pidgin-mra/issues#issue/2):
+    Phone and other strange contacts are skipped.
+
