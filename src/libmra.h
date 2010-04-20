@@ -22,9 +22,9 @@
 #ifndef _MRA_H_
 #define _MRA_H_
 
-#define VERSION_TXT "gtk-mra-baz v0.2;"
+#define VERSION_TXT "pidgin-mra 0.1"
 
-#define MRA_HOST "mrim14.mail.ru"
+#define MRA_HOST "mrim20.mail.ru"
 #define MRA_PORT 2041
 #define MRA_BUF_LEN 65536
 #define MAX_GROUP   20
@@ -45,6 +45,7 @@
 #include <proxy.h>
 #include <sslconn.h>
 #include <prpl.h>
+#include <version.h>
 #include <debug.h>
 #include <connection.h>
 #include <request.h>
@@ -144,6 +145,7 @@ void mra_add_buddy_ok_cb(mra_add_buddy_req *, char *);
 void mra_add_buddy_cancel_cb(mra_add_buddy_req *, char *);
 void mra_add_buddy(PurpleConnection *, PurpleBuddy *, PurpleGroup *);
 void mra_remove_buddy(PurpleConnection *, PurpleBuddy *, PurpleGroup *);
+void mra_alias_buddy(PurpleConnection *, const char *, const char *);
 void mra_login(PurpleAccount *);
 void mra_close(PurpleConnection *);
 void mra_get_anketa(PurpleConnection *, const char *);

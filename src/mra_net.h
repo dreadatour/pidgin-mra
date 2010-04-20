@@ -108,6 +108,7 @@ void mra_net_read_user_status(gpointer, char *, int);
 void mra_net_read_message(gpointer, char *, int);
 void mra_net_read_message_offline(gpointer, char *, int);
 void mra_net_read_add_contact_ack(gpointer, char *, int);
+void mra_net_read_modify_contact_ack(gpointer, char *, int);
 void mra_net_read_auth_ack(gpointer, char *, int);
 void mra_net_read_anketa_info(gpointer, char *, int);
 void mra_net_read_mailbox_status(gpointer, char *, int);

@@ -722,6 +722,10 @@ gboolean mra_net_read_proceed(gpointer data)
             // 'add new contact ack' packet
             mra_net_read_add_contact_ack(mmp, answer, head->dlen);
             break;
+        case MRIM_CS_MODIFY_CONTACT_ACK:
+            // 'add new contact ack' packet
+            mra_net_read_modify_contact_ack(mmp, answer, head->dlen);
+            break;
         case MRIM_CS_AUTHORIZE_ACK:
             // 'add new user auth request ack' packet
             mra_net_read_auth_ack(mmp, answer, head->dlen);
@@ -1276,7 +1280,21 @@ void mra_net_read_add_contact_ack(gpointer data, char *answer, int len)
 }
             
 /**************************************************************************************************
-    Read 'add new contact ack' packet
+    Read 'modify contact ack' packet
+**************************************************************************************************/
+void mra_net_read_modify_contact_ack(gpointer data, char *answer, int len)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);
+
+    UNUSED(data);
+    UNUSED(answer);
+    UNUSED(len);
+                
+    purple_debug_info("mra", "[%s] contact modify ack received\n", __func__);              /* FIXME */
+}
+            
+/**************************************************************************************************
+    Read 'auth ack' packet
 **************************************************************************************************/
 void mra_net_read_auth_ack(gpointer data, char *answer, int len)
 {

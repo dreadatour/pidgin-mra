@@ -194,7 +194,6 @@ void mra_contact_list_cb(gpointer data, gint status, gint group_cnt, mra_group *
     int i;
     char *group;
     PurpleBuddy *buddy;
-    PurpleContact* contact;
 
     // proceed all groups
     for (i = 0; i < group_cnt; i++) {
@@ -245,10 +244,12 @@ void mra_contact_list_cb(gpointer data, gint status, gint group_cnt, mra_group *
             buddy = purple_find_buddy(mmp->acct, contacts[i].email);
         }
 
-        contact = purple_buddy_get_contact(buddy);
-
-        // set contact status
-        purple_blist_alias_contact(contact, contacts[i].nickname);
+        // set buddy status
+        if (contacts[i].nickname != NULL && *contacts[i].nickname != '\0') {
+            purple_blist_alias_buddy(buddy, contacts[i].nickname);
+        } else {
+            purple_blist_alias_buddy(buddy, contacts[i].email);
+        }
         mra_contact_set_status(mmp, contacts[i].email, contacts[i].status);
     }
 }
@@ -631,6 +632,12 @@ void mra_remove_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *gro
 
     UNUSED(group);
     
+    if (buddy == NULL) {
+        purple_debug_info("mra", "[%s] I can't remove user because I have no buddy!\n", __func__);             
+                                                                                        /* FIXME */
+        return;
+    }
+    
     mra_serv_conn *mmp = gc->proto_data;
     gpointer buddy_user_id;
     unsigned int user_id;
@@ -639,7 +646,17 @@ void mra_remove_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *gro
     char *name;
 
     email = (char *) purple_buddy_get_name(buddy);
+    if (email == NULL) {
+        purple_debug_info("mra", "[%s] I can't remove user because I can't find email!\n", __func__);             
+                                                                                        /* FIXME */
+        return;
+    }
     name  = (char *) purple_buddy_get_alias(buddy);
+    if (name == NULL) {
+        purple_debug_info("mra", "[%s] I can't remove user because I can't find name!\n", __func__);             
+                                                                                        /* FIXME */
+        return;
+    }
     buddy_user_id = g_hash_table_lookup(mmp->users, email);
     if (buddy_user_id == NULL) {
         purple_debug_info("mra", "[%s] I can't remove user because I can't find user_id!\n", __func__);             
@@ -652,6 +669,48 @@ void mra_remove_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *gro
                       __func__, email, name, user_id);                                  /* FIXME */
 
     mra_net_send_change_user(mmp, user_id, group_id, email, name, CONTACT_FLAG_REMOVED);
+}
+
+/**************************************************************************************************
+    Alias buddy
+**************************************************************************************************/
+void mra_alias_buddy(PurpleConnection *gc, const char *name, const char *alias)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+    purple_debug_info("mra", "[%s] name: %s, alias: %s\n",  __func__, name, alias);     /* FIXME */
+
+    if (alias == NULL) {
+        purple_debug_info("mra", "[%s] Alias can't be NULL!\n", __func__);             
+                                                                                        /* FIXME */
+        return;
+    }
+    
+    mra_serv_conn *mmp = gc->proto_data;
+    PurpleBuddy *buddy;
+    gpointer buddy_user_id;
+    unsigned int user_id;
+    unsigned int group_id = 0;
+
+    buddy = purple_find_buddy(mmp->acct, name);
+    if (buddy == NULL) {
+        purple_debug_info("mra", "[%s] I can't rename buddy because I can't find name!\n", __func__);             
+                                                                                        /* FIXME */
+        return;
+    }
+    
+    buddy_user_id = g_hash_table_lookup(mmp->users, name);
+    if (buddy_user_id == NULL) {
+        purple_debug_info("mra", "[%s] I can't remove user because I can't find user_id!\n", __func__);             
+                                                                                        /* FIXME */
+        return;
+    }
+    user_id = atol(buddy_user_id);
+    
+    purple_debug_info("mra", "[%s] Rename user %s (%d) to '%s'\n", 
+                      __func__, name, user_id, alias);                                    /* FIXME */
+
+//    purple_blist_alias_buddy(buddy, alias);
+	mra_net_send_change_user(mmp, user_id, group_id, (char *) name, (char *) alias, 0);
 }
 
 /**************************************************************************************************
@@ -845,8 +904,6 @@ GList *mra_actions(PurplePlugin *plugin, gpointer context)
 **************************************************************************************************/
 static const char *mra_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
 {
-    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-
     UNUSED(account);
     UNUSED(buddy);
 
@@ -896,8 +953,7 @@ static GHashTable * mra_get_account_text_table(PurpleAccount *acct)
     Info about Mail.ru Agent protocol - list of functions for actions
 **************************************************************************************************/
 static PurplePluginProtocolInfo prpl_info = {
-	OPT_PROTO_UNIQUE_CHATNAME |
-    OPT_PROTO_MAIL_CHECK,
+	OPT_PROTO_MAIL_CHECK | OPT_PROTO_IM_IMAGE,
 	NULL,                                           // user_splits
 	NULL,                                           // protocol_options
 	{"jpg",0,0,50,50,-1,PURPLE_ICON_SCALE_SEND},    // icon_spec
@@ -938,7 +994,7 @@ static PurplePluginProtocolInfo prpl_info = {
 	NULL,                                           // register_user
 	NULL,                                           // get_cb_info
 	NULL,                                           // get_cb_away
-	NULL,                                           // alias_buddy
+	mra_alias_buddy,                                // alias_buddy
 	NULL,                                           // group_buddy
 	NULL,                                           // rename_group
 	NULL,                                           // buddy_free
@@ -994,8 +1050,8 @@ static void plugin_init(PurplePlugin *plugin)
 **************************************************************************************************/
 static PurplePluginInfo info = {
 	PURPLE_PLUGIN_MAGIC,                            // purple plugin magic
-	2,                                              // major version of purple
-	1,                                              // minor version of purple
+	PURPLE_MAJOR_VERSION,                           // major version of purple
+	PURPLE_MINOR_VERSION,                           // minor version of purple
 	PURPLE_PLUGIN_PROTOCOL,                         // type
 	NULL,                                           // ui_requirement
 	0,                                              // flags
