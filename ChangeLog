@@ -1,0 +1,18 @@
+2010-03-04  Vladimir Rudnyh  <mail@dreadatour.ru>
+
+    * Base functional
+
+2010-03-31  Konstantin Menyaev  <viper@lamak.ru>
+
+    * Add 'Get info about contact' feature
+
+    * Add 'New mail notification' feature
+
+2010-04-20  Vladimir Rudnyh  <mail@dreadatour.ru>
+
+    * Fix logout (account usage on another computer).
+
+    * Fix email validation (http://github.com/dreadatour/pidgin-mra/issues#issue/2):
+    Capital letters are allowed now.
+    Email validation is fixed (no more segfault now).
+

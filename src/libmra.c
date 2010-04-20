@@ -50,8 +50,8 @@ gboolean mra_email_is_valid(const char *email)
     // check username (allowed symbols)
     if (ret) {
         while (*email != '@') {
-            // only 'a-z', '0-9', '_', '-' and '.' allowed
-            if (ret && (*email < '0' || *email > '9') && (*email < 'a' || *email > 'z') && *email != '_' && *email != '-' && *email != '.') {
+            // only 'a-z', 'A-Z', '0-9', '_', '-' and '.' allowed
+            if (ret && (*email < '0' || *email > '9') && (*email < 'a' || *email > 'z') && (*email < 'A' || *email > 'Z') && *email != '_' && *email != '-' && *email != '.') {
                 ret = FALSE;
                 purple_debug_info("mra", "[%s] failed check 'allowed symbols'\n", __func__);/* FIXME */
                 break;
@@ -160,15 +160,14 @@ void mra_logout_cb(gpointer data, char *reason)
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
     mra_serv_conn *mmp = data;
+    const char *username = purple_account_get_username(mmp->acct);
 
     purple_debug_error("mra", "[%s] got reason: %s\n", __func__, reason);               /* FIXME */
     
     gchar *tmp;
-    tmp = g_strdup_printf(_("This account is userd an another computer: %s\n"), reason);
-    purple_connection_error_reason(mmp->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, tmp);
+    tmp = g_strdup_printf(_("Account %s is used on another computer or device.\n"), username);
+    purple_connection_error_reason(mmp->gc, PURPLE_CONNECTION_ERROR_NAME_IN_USE, tmp);
     g_free(tmp);
-
-    mra_close(mmp->gc);
 }
 
 /**************************************************************************************************
@@ -422,7 +421,7 @@ void mra_connect_cb(gpointer data, gint source, const gchar *error_message)
     // return error if username is invalid
     if (!mra_email_is_valid(username)) {
         purple_debug_error("mra", "[%s] email '%s' is invalid\n", __func__, username);  /* FIXME */
-        purple_connection_error_reason (gc, PURPLE_CONNECTION_ERROR_INVALID_SETTINGS, _("Username is invalid"));
+        purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_INVALID_SETTINGS, _("Username is invalid"));
         return;
     }
 
@@ -716,27 +715,12 @@ void mra_close(PurpleConnection *gc)
     // TODO: Fix this
 
     mra_serv_conn *mmp;
-//    GSList *buddies;
 
     g_return_if_fail(gc != NULL);
     g_return_if_fail(gc->proto_data != NULL);
 
     mmp = gc->proto_data;
 
-    // destroy blist subsystem
-//    fb_blist_destroy(fba);
-
-    // destroy conversation subsystem
-//    fb_conversation_destroy(fba);
-
-    
-//    buddies = purple_find_buddies(mmp->acct, NULL);
-//    while(buddies) {
-//        PurpleBuddy *b = buddies->data;
-//        fb_buddy_free(b);
-//        buddies = g_slist_delete_link(buddies, buddies);
-//    }  
-    
     if (mmp->ping_timer) {
         purple_timeout_remove(mmp->ping_timer);
     }
@@ -753,6 +737,9 @@ void mra_close(PurpleConnection *gc)
     g_hash_table_destroy(mmp->users);
     g_hash_table_destroy(mmp->groups);
     g_free(mmp);
+
+    purple_connection_set_protocol_data(gc, NULL);
+    purple_prefs_disconnect_by_handle(gc);
 
     purple_debug_error("mra", "[%s] connection was closed\n", __func__);                /* FIXME */
 }
