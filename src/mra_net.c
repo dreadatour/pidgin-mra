@@ -914,6 +914,7 @@ void mra_net_read_contact_list(gpointer data, char *answer, int len)
     unsigned int contact_group_id;
     unsigned int group_cnt = 0;
     unsigned int contact_cnt = 0;
+    gboolean skip_user;
 
     p = answer;
 
@@ -1031,6 +1032,18 @@ void mra_net_read_contact_list(gpointer data, char *answer, int len)
                                   __func__);                                            /* FIXME */
                 continue;
             }
+            
+            // TODO: skip contact if it is duplicate
+            skip_user = FALSE;
+            for (i = 0; i < contact_cnt; i++) {
+                if (strcmp(email, contacts[i].email) == 0) {
+                    purple_debug_info("mra", "[%s] skip user %s\n", __func__, email);   /* FIXME */
+                    skip_user = TRUE;
+                    break;
+                }
+            }
+            if (skip_user)
+                continue;
 
             // set default contact group
             contact_group_id = 0;
