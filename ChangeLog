@@ -28,3 +28,8 @@
 
     * Fix contact list parser
 
+    * Change protocol icons
+
+    * Add simple chat feature:
+    NB! You need to add chat contact to user list to chat work correctly.
+

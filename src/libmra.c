@@ -61,7 +61,7 @@ gboolean mra_email_is_valid(const char *email)
     }
 
     // check domain
-    if (ret && strcmp(eml[1], "mail.ru") != 0 && strcmp(eml[1], "list.ru") != 0 && strcmp(eml[1], "inbox.ru") != 0 && strcmp(eml[1], "bk.ru") != 0 && strcmp(eml[1], "corp.mail.ru") != 0) {
+    if (ret && strcmp(eml[1], "mail.ru") != 0 && strcmp(eml[1], "list.ru") != 0 && strcmp(eml[1], "inbox.ru") != 0 && strcmp(eml[1], "bk.ru") != 0 && strcmp(eml[1], "corp.mail.ru") != 0 && strcmp(eml[1], "chat.agent") != 0) {
         ret = FALSE;
         purple_debug_info("mra", "[%s] failed check 'allowed domains'\n", __func__);    /* FIXME */
     }
@@ -563,6 +563,8 @@ void mra_add_buddy_ok_cb(mra_add_buddy_req *data, char *msg)
     PurpleBuddy *buddy;
     PurpleGroup *group;
     mra_serv_conn *mmp;
+    gchar *email;
+    gchar *alias;
 
     pc = data->pc;
     buddy = data->buddy;
@@ -571,7 +573,14 @@ void mra_add_buddy_ok_cb(mra_add_buddy_req *data, char *msg)
 
     mmp = pc->proto_data;
 
+    email = strdup(purple_buddy_get_name(buddy));
+    alias = strdup(purple_buddy_get_alias(buddy));
+
+    mra_net_send_add_user(mmp, email, alias, 0, 0);
     mra_net_send_message(mmp, purple_buddy_get_name(buddy), msg, MESSAGE_FLAG_AUTHORIZE);
+
+    g_free(email);
+    g_free(alias);
 }
 
 /**************************************************************************************************
