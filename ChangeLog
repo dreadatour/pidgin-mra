@@ -21,3 +21,10 @@
 
     * Add 'Rename users' feature (http://github.com/dreadatour/pidgin-mra/issues#issue/6)
 
+2010-04-21  Vladimir Rudnyh  <mail@dreadatour.ru>
+
+    * Fix 'New mail notification' feature:
+    Now it is depend on setting.
+
+    * Fix contact list parser
+
