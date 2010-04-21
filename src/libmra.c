@@ -339,6 +339,10 @@ void mra_mail_notify_cb(gpointer data, u_int status)
 	char buff[128];
     mra_serv_conn *mmp = data;
 
+    // skip notify if no such setting
+    if (!purple_account_get_check_mail(mmp->acct))
+        return;
+
 	if (status < 1)
 		return;
 
