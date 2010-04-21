@@ -351,6 +351,10 @@ gboolean mra_net_send_message(mra_serv_conn *mmp, const char *to, const char *me
     char *message_lps;
     char *message_rtf_lps;
     gboolean ret = FALSE;
+    
+//    purple_debug_info("mra", "[ %s ] to: %s\n", __func__, to);                          /* FIXME */
+//    purple_debug_info("mra", "[ %s ] message: %s\n", __func__, message);                /* FIXME */
+//    purple_debug_info("mra", "[ %s ] flags: 0x%X\n", __func__, flags);                    /* FIXME */
 
     to_lps = mra_net_mklps(to);
     message_lps = mra_net_mklps(to_crlf(utf8_to_cp1251(message)));
@@ -713,6 +717,10 @@ gboolean mra_net_read_proceed(gpointer data)
         case MRIM_CS_MESSAGE_ACK:
             // 'receive message' packet
             mra_net_read_message(mmp, answer, head->dlen);
+            break;
+        case MRIM_CS_MESSAGE_STATUS:
+            // 'message status' packet
+            mra_net_read_message_status(mmp, answer, head->dlen);
             break;
         case MRIM_CS_OFFLINE_MESSAGE_ACK:
             // 'receive offline message' packet
@@ -1177,6 +1185,51 @@ void mra_net_read_message(gpointer data, char *answer, int len)
     g_free(message_rtf);
 }
 
+/**************************************************************************************************
+    Read 'message status' packet
+**************************************************************************************************/
+void mra_net_read_message_status(gpointer data, char *answer, int len)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);
+
+    UNUSED(len);
+
+    mra_serv_conn *mmp = data;
+	u_int status;
+    gchar *buf;
+
+    status = *(u_int *) answer;
+    answer += sizeof(u_int);
+
+    if (status > 0) {
+        switch (status) {
+            case MESSAGE_REJECTED_NOUSER:
+                buf = g_strdup_printf("Message is not delivered: user not found.");
+                break;
+            case MESSAGE_REJECTED_INTERR:
+                buf = g_strdup_printf("Message is not delivered: internal server error.");
+                break;
+            case MESSAGE_REJECTED_LIMIT_EXCEEDED:
+                buf = g_strdup_printf("Message is not delivered: offline messages limit exceeded.");
+                break;
+            case MESSAGE_REJECTED_TOO_LARGE:
+                buf = g_strdup_printf("Message is not delivered: message is too large.");
+                break;
+            case MESSAGE_REJECTED_DENY_OFFMSG:
+                buf = g_strdup_printf("Message is not delivered: user does not accept offline messages.");
+                break;
+            default:
+                buf = g_strdup_printf("Message is not delivered: unknown error.");
+        }
+        purple_notify_error(purple_account_get_connection(mmp->acct), NULL, _("Unable to deliver message"), buf);
+        g_free(buf);
+    }
+
+
+
+    purple_debug_info("mra", "[%s] message status received: 0x%X\n", __func__, status);   /* FIXME */
+}
+            
 /**************************************************************************************************
     Read 'message offline' packet
 **************************************************************************************************/
