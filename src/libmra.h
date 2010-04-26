@@ -113,11 +113,11 @@ typedef struct _mra_add_buddy_req
 #include "proto.h"
 #include "mra_net.h"
 
-#define MRA_STATUS_ID_OFFLINE		    "offline"
-#define MRA_STATUS_ID_ONLINE		    "available"
-#define MRA_STATUS_ID_AWAY		        "away"
-#define MRA_STATUS_ID_UNDETERMINATED	"custom"
-#define MRA_STATUS_ID_INVISIBLE	        "invisible"
+#define MRA_STATUS_ID_OFFLINE		    "OFFLINE"
+#define MRA_STATUS_ID_ONLINE		    "ONLINE"
+#define MRA_STATUS_ID_AWAY		        "AWAY"
+#define MRA_STATUS_ID_UNDETERMINATED	"UNKNOWN"
+#define MRA_STATUS_ID_INVISIBLE	        "UNVISIBLE"
 
 gboolean mra_email_is_valid(const char *);
 
@@ -153,6 +153,7 @@ void mra_get_anketa(PurpleConnection *, const char *);
 GList *mra_statuses(PurpleAccount *);
 void mra_set_status_cb(PurplePluginAction *);
 GList *mra_actions(PurplePlugin *, gpointer);
+char *mra_status_text(PurpleBuddy *);
 
 gboolean plugin_load(PurplePlugin *);
 gboolean plugin_unload(PurplePlugin *);

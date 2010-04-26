@@ -165,11 +165,11 @@ char *to_crlf(const char *text)
 **************************************************************************************************/
 char *mra_net_mklps(const char *sz)
 {
-    size_t len;
+    uint32_t len;
     char *lps = LPSALLOC(strlen(sz));
 
     len = strlen(sz);
-    *((size_t *)lps) = len;
+    *((uint32_t *)lps) = len;
     memcpy(lps + sizeof(uint32_t), sz, strlen(sz));
     return lps;
 }
@@ -179,10 +179,10 @@ char *mra_net_mklps(const char *sz)
 **************************************************************************************************/
 char *mra_net_mksz(char *lps)
 {
-    size_t len;
+    uint32_t len;
     char *sz = (char *) malloc(1 + LPSLENGTH(lps));
                          
-    len = *((size_t *)lps);
+    len = *((uint32_t *)lps);
     memcpy(sz, lps + sizeof(uint32_t), len);
     *(sz + len) = 0;
     return sz;

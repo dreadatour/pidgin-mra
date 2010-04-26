@@ -18,14 +18,14 @@
 #define CS_MAGIC                0xDEADBEEF  // client magic (C->S)
 
 typedef struct _mrim_packet_header_t {
-    u_long  magic;		    // magic
-    u_long  proto;		    // protocol version
-    u_long  seq;		    // sequence number
-    u_long  msg;		    // packet type
-    u_long  dlen; 		    // data length
-    u_long	from;		    // sender address
-    u_long	fromport;	    // sender port
-    u_char	reserved[16];	// reserved
+    uint32_t magic;		    // magic
+    uint32_t proto;		    // protocol version
+    uint32_t seq;		    // sequence number
+    uint32_t msg;		    // packet type
+    uint32_t dlen; 		    // data length
+    uint32_t from;		    // sender address
+    uint32_t fromport;	    // sender port
+    u_char	 reserved[16];	// reserved
 } mrim_packet_header_t;
 
 //=================================================================================================

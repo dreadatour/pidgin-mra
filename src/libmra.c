@@ -23,6 +23,8 @@
 
 #include "libmra.h"
 
+static PurplePlugin *this_plugin;
+
 /**************************************************************************************************
     Check email
 **************************************************************************************************/
@@ -837,19 +839,19 @@ GList *mra_statuses(PurpleAccount *acct)
 	PurpleStatusType *status;
 	
 	//Online people have a status message and also a date when it was set	
-	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE, NULL, _("Online"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
+	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE, "ONLINE", _("Online"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
 	types  = g_list_append(types, status);
 	
 	//Away people have a status message and also a date when it was set	
-	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AWAY, NULL, _("Away"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
+	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AWAY, "AWAY", _("Away"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
 	types  = g_list_append(types, status);
 	
 	//Unavailable people have a status message and also a date when it was set	
-	status = purple_status_type_new_with_attrs(PURPLE_STATUS_UNAVAILABLE, NULL, _("Unavailable"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
+	status = purple_status_type_new_with_attrs(PURPLE_STATUS_UNAVAILABLE, "UNAVIALABLE", _("Unavailable"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
 	types  = g_list_append(types, status);
 	
 	//Offline people dont have messages
-	status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, NULL, _("Offline"), FALSE, TRUE, FALSE);
+	status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, "OFFLINE", _("Offline"), FALSE, TRUE, FALSE);
 	types  = g_list_append(types, status);
 	
 	return types;
@@ -924,6 +926,39 @@ static const char *mra_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
 }
 
 /**************************************************************************************************
+	Status text
+**************************************************************************************************/
+char *mra_status_text(PurpleBuddy *buddy)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+	
+    PurplePresence *presence;
+	PurpleStatus *status;
+    char *text;
+    char *tmp;
+	
+    if (buddy == NULL) {
+		return NULL;
+    }
+    
+	presence = purple_buddy_get_presence(buddy);
+	if (presence == NULL) {
+		return NULL;
+    }
+	
+    status = purple_presence_get_active_status(presence);
+	if (status == NULL) {
+		return NULL;
+    }
+
+    tmp = purple_utf8_salvage(purple_status_get_name(status));
+    text = g_markup_escape_text(tmp, -1); 
+    g_free(tmp);
+
+    return text;
+}
+
+/**************************************************************************************************
     Load plugin
 **************************************************************************************************/
 gboolean plugin_load(PurplePlugin *plugin)
@@ -972,7 +1007,7 @@ static PurplePluginProtocolInfo prpl_info = {
 	{"jpg",0,0,50,50,-1,PURPLE_ICON_SCALE_SEND},    // icon_spec
 	mra_list_icon,                                  // list_icon
 	NULL,                                           // list_emblems
-	NULL,                                           // status_text
+	mra_status_text,                                // status_text
 	NULL,                                           // tooltip_text
 	mra_statuses,                                   // status_types
 	NULL,                                           // blist_node_menu
@@ -1043,6 +1078,8 @@ static PurplePluginProtocolInfo prpl_info = {
 static void plugin_init(PurplePlugin *plugin)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+    this_plugin = plugin;
 
 //  initialize variables and structs
 	PurpleAccountOption *option;
