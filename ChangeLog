@@ -33,3 +33,7 @@
     * Add simple chat feature:
     NB! You need to add chat contact to user list to chat work correctly.
 
+2010-04-21  Vladimir Rudnyh  <mail@dreadatour.ru>
+
+    * Fix variables types -> hope, it will work in 64-bit base systems
+

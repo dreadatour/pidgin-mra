@@ -29,9 +29,9 @@
 #define MRA_MESSAGE_TYPE_SYSTEM     0x0002
 #define MRA_MESSAGE_TYPE_CONTACTS   0x0003
 
-#define LPSLENGTH(s) (*((unsigned int *)(s)))
-#define LPSSIZE(s)   (LPSLENGTH(s) + sizeof(unsigned int))
-#define LPSALLOC(c)  ((char *) malloc((c) + sizeof(unsigned int)))
+#define LPSLENGTH(s) (*((uint32_t *)(s)))
+#define LPSSIZE(s)   (LPSLENGTH(s) + sizeof(uint32_t))
+#define LPSALLOC(c)  ((char *) malloc((c) + sizeof(uint32_t)))
 
 typedef struct _mra_serv_conn {
     PurpleAccount *acct;
@@ -57,17 +57,17 @@ typedef struct _mra_serv_conn {
     guint ping_timer;
     
     // callbacks
-    void (*callback_hello)(gpointer);                                                       // hello
-    void (*callback_login)(gpointer, gint, gchar*);                                         // auth
-    void (*callback_logout)(gpointer, gchar*);                                              // auth
-    void (*callback_user_info)(gpointer, mra_user_info*);                                   // user info
-    void (*callback_contact_list)(gpointer, gint, gint, mra_group*, gint, mra_contact*);    // contact list
-    void (*callback_user_status)(gpointer, char*, u_int);                                   // user status
-    void (*callback_auth_request)(gpointer, char*, char*);                                  // auth request
-    void (*callback_typing_notify)(gpointer, char*);                                        // typing notify
-    void (*callback_message)(gpointer, char*, char*, char*, time_t, gint);                  // message
-	void (*callback_anketa_info)(gpointer, const char *, mra_anketa_info *);                // anketa info
-	void (*callback_mail_notify)(gpointer, u_int);                                          // new mails notify
+    void (*callback_hello)(gpointer);                                                                   // hello
+    void (*callback_login)(gpointer, uint32_t, gchar*);                                                 // auth
+    void (*callback_logout)(gpointer, gchar*);                                                          // auth
+    void (*callback_user_info)(gpointer, mra_user_info*);                                               // user info
+    void (*callback_contact_list)(gpointer, uint32_t, uint32_t, mra_group*, uint32_t, mra_contact*);    // contact list
+    void (*callback_user_status)(gpointer, char*, uint32_t);                                            // user status
+    void (*callback_auth_request)(gpointer, char*, char*);                                              // auth request
+    void (*callback_typing_notify)(gpointer, char*);                                                    // typing notify
+    void (*callback_message)(gpointer, char*, char*, char*, time_t, uint32_t);                          // message
+	void (*callback_anketa_info)(gpointer, const char *, mra_anketa_info *);                            // anketa info
+	void (*callback_mail_notify)(gpointer, uint32_t);                                                   // new mails notify
 } mra_serv_conn;
 
 char *check_p(gpointer, char *, char *, char);
@@ -77,42 +77,42 @@ char *to_crlf(const char *);
 char *mra_net_mklps(const char *);
 char *mra_net_mksz(char *);
 
-void mra_net_fill_cs_header(mrim_packet_header_t *, u_int, u_int, u_int);
-void mra_net_send(gpointer, gpointer, u_int);
+void mra_net_fill_cs_header(mrim_packet_header_t *, uint32_t, uint32_t, uint32_t);
+void mra_net_send(gpointer, gpointer, uint32_t);
 gboolean mra_net_send_flush(gpointer);
 
 gboolean mra_net_ping_timeout_cb(mra_serv_conn *);
 
 gboolean mra_net_send_ping(mra_serv_conn *);
 gboolean mra_net_send_hello(mra_serv_conn *);
-gboolean mra_net_send_auth(mra_serv_conn *, const char *, const char *, unsigned int );
-gboolean mra_net_send_receive_ack(mra_serv_conn *, char *, u_int);
-gboolean mra_net_send_message(mra_serv_conn *, const char *, const char *, u_int);
+gboolean mra_net_send_auth(mra_serv_conn *, const char *, const char *, uint32_t);
+gboolean mra_net_send_receive_ack(mra_serv_conn *, char *, uint32_t);
+gboolean mra_net_send_message(mra_serv_conn *, const char *, const char *, uint32_t);
 gboolean mra_net_send_typing(mra_serv_conn *, const char *);
 gboolean mra_net_send_authorize_user(mra_serv_conn *, char *);
-gboolean mra_net_send_add_user(mra_serv_conn *, char *, char *, u_int, u_int);
-gboolean mra_net_send_change_user(mra_serv_conn *, unsigned int, unsigned int, char *, char *, unsigned int);
-gboolean mra_net_send_status(mra_serv_conn *, unsigned int);
+gboolean mra_net_send_add_user(mra_serv_conn *, char *, char *, uint32_t, uint32_t);
+gboolean mra_net_send_change_user(mra_serv_conn *, uint32_t, uint32_t, char *, char *, uint32_t);
+gboolean mra_net_send_status(mra_serv_conn *, uint32_t);
 gboolean mra_net_send_anketa_info(mra_serv_conn *, const char *);
 
 void mra_net_read_cb(gpointer, gint, PurpleInputCondition);
 gboolean mra_net_read_proceed(gpointer);
 
-void mra_net_read_hello(gpointer, char *, int);
-void mra_net_read_login_successful(gpointer, char *, int);
-void mra_net_read_login_failed(gpointer, char *, int);
-void mra_net_read_logout(gpointer, char *, int);
-void mra_net_read_user_info(gpointer, char *, int);
-void mra_net_read_contact_list(gpointer, char *, int);
-void mra_net_read_user_status(gpointer, char *, int);
-void mra_net_read_message(gpointer, char *, int);
-void mra_net_read_message_status(gpointer, char *, int);
-void mra_net_read_message_offline(gpointer, char *, int);
-void mra_net_read_add_contact_ack(gpointer, char *, int);
-void mra_net_read_modify_contact_ack(gpointer, char *, int);
-void mra_net_read_auth_ack(gpointer, char *, int);
-void mra_net_read_anketa_info(gpointer, char *, int);
-void mra_net_read_mailbox_status(gpointer, char *, int);
+void mra_net_read_hello(gpointer, char *, uint32_t);
+void mra_net_read_login_successful(gpointer, char *, uint32_t);
+void mra_net_read_login_failed(gpointer, char *, uint32_t);
+void mra_net_read_logout(gpointer, char *, uint32_t);
+void mra_net_read_user_info(gpointer, char *, uint32_t);
+void mra_net_read_contact_list(gpointer, char *, uint32_t);
+void mra_net_read_user_status(gpointer, char *, uint32_t);
+void mra_net_read_message(gpointer, char *, uint32_t);
+void mra_net_read_message_status(gpointer, char *, uint32_t);
+void mra_net_read_message_offline(gpointer, char *, uint32_t);
+void mra_net_read_add_contact_ack(gpointer, char *, uint32_t);
+void mra_net_read_modify_contact_ack(gpointer, char *, uint32_t);
+void mra_net_read_auth_ack(gpointer, char *, uint32_t);
+void mra_net_read_anketa_info(gpointer, char *, uint32_t);
+void mra_net_read_mailbox_status(gpointer, char *, uint32_t);
 
 #endif /* _MRA_NET_H_ */
 

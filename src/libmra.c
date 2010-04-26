@@ -74,7 +74,7 @@ gboolean mra_email_is_valid(const char *email)
 /**************************************************************************************************
     Set contact status
 **************************************************************************************************/
-void mra_contact_set_status(gpointer data, char *email, u_int status) 
+void mra_contact_set_status(gpointer data, char *email, uint32_t status) 
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
@@ -119,7 +119,7 @@ void mra_hello_cb(gpointer data)
     mra_serv_conn *mmp = data;
     const char *username = purple_account_get_username(mmp->acct);
     const char *password = purple_account_get_password(mmp->acct);
-    unsigned int status  = STATUS_ONLINE;
+    uint32_t status  = STATUS_ONLINE;
 
     purple_connection_update_progress(mmp->gc, _("Connecting"), 3, 3);
 
@@ -129,7 +129,7 @@ void mra_hello_cb(gpointer data)
 /**************************************************************************************************
     Callback for 'login' function
 **************************************************************************************************/
-void mra_login_cb(gpointer data, gint status, char *message)
+void mra_login_cb(gpointer data, uint32_t status, char *message)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
@@ -184,14 +184,14 @@ void mra_user_info_cb(gpointer data, mra_user_info *user_info)
 /**************************************************************************************************
     Callback for 'contact list' function
 **************************************************************************************************/
-void mra_contact_list_cb(gpointer data, gint status, gint group_cnt, mra_group *groups, gint contact_cnt, mra_contact *contacts)
+void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_group *groups, size_t contact_cnt, mra_contact *contacts)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
     UNUSED(status);
 
     mra_serv_conn *mmp = data;
-    int i;
+    size_t i;
     char *group;
     PurpleBuddy *buddy;
 
@@ -257,7 +257,7 @@ void mra_contact_list_cb(gpointer data, gint status, gint group_cnt, mra_group *
 /**************************************************************************************************
     Callback for 'user_status' function
 **************************************************************************************************/
-void mra_user_status_cb(gpointer data, char *email, u_int status)
+void mra_user_status_cb(gpointer data, char *email, uint32_t status)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
     
@@ -332,7 +332,7 @@ void mra_typing_notify_cb(gpointer data, char *from)
 /**************************************************************************************************
     Callback for 'mail_notify' function
 **************************************************************************************************/
-void mra_mail_notify_cb(gpointer data, u_int status)
+void mra_mail_notify_cb(gpointer data, uint32_t status)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
@@ -354,7 +354,7 @@ void mra_mail_notify_cb(gpointer data, u_int status)
 /**************************************************************************************************
     Callback for 'message' function
 **************************************************************************************************/
-void mra_message_cb(gpointer data, char *from, char *message, char *message_rtf, time_t time, gint type)
+void mra_message_cb(gpointer data, char *from, char *message, char *message_rtf, time_t time, uint32_t type)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
@@ -529,7 +529,7 @@ void mra_set_status(PurpleAccount *acct, PurpleStatus *status)
     PurpleConnection *gc = purple_account_get_connection(acct);
     mra_serv_conn *mmp = gc->proto_data;
     const gchar *status_id;
-    unsigned int mra_status;
+    uint32_t mra_status;
 
     if (!purple_status_is_active(status))
         return;
@@ -653,8 +653,8 @@ void mra_remove_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *gro
     
     mra_serv_conn *mmp = gc->proto_data;
     gpointer buddy_user_id;
-    unsigned int user_id;
-    unsigned int group_id = 0;
+    uint32_t user_id;
+    uint32_t group_id = 0;
     char *email;
     char *name;
 
@@ -701,8 +701,8 @@ void mra_alias_buddy(PurpleConnection *gc, const char *name, const char *alias)
     mra_serv_conn *mmp = gc->proto_data;
     PurpleBuddy *buddy;
     gpointer buddy_user_id;
-    unsigned int user_id;
-    unsigned int group_id = 0;
+    uint32_t user_id;
+    uint32_t group_id = 0;
 
     buddy = purple_find_buddy(mmp->acct, name);
     if (buddy == NULL) {

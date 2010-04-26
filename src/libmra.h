@@ -56,9 +56,9 @@
 #include <netinet/in.h>
 
 typedef struct _mra_user_info {   
-    unsigned int weather_city;
-    unsigned int messages_total;
-    unsigned int messages_unread;
+    uint32_t weather_city;
+    uint32_t messages_total;
+    uint32_t messages_unread;
     char *mrim_nickname;
     char *client_endpoint;
 } mra_user_info;
@@ -82,19 +82,19 @@ typedef struct _mra_anketa_info {
 } mra_anketa_info;
 
 typedef struct _mra_contact {
-    u_int id; 
-    u_int status;
+    uint32_t id; 
+    uint32_t status;
     gchar *email;
     gchar *nickname;
-    u_int flags;
-    u_int group_id;
-    u_int intflags;
+    uint32_t flags;
+    uint32_t group_id;
+    uint32_t intflags;
 } mra_contact;
 
 typedef struct _mra_group {
-    u_int id; 
+    uint32_t id; 
     gchar *name;
-    u_int flags;
+    uint32_t flags;
 } mra_group;
 
 typedef struct _mra_auth_request {
@@ -121,21 +121,21 @@ typedef struct _mra_add_buddy_req
 
 gboolean mra_email_is_valid(const char *);
 
-void mra_contact_set_status(gpointer, char *, u_int);
+void mra_contact_set_status(gpointer, char *, uint32_t);
 
 void mra_hello_cb(gpointer);
-void mra_login_cb(gpointer, gint, char *);
+void mra_login_cb(gpointer, uint32_t, char *);
 void mra_logout_cb(gpointer, char *);
 void mra_user_info_cb(gpointer, mra_user_info *);
-void mra_contact_list_cb(gpointer, gint, gint, mra_group *, gint, mra_contact *);
-void mra_user_status_cb(gpointer, char *, u_int);
+void mra_contact_list_cb(gpointer, uint32_t, size_t, mra_group *, size_t, mra_contact *);
+void mra_user_status_cb(gpointer, char *, uint32_t);
 void mra_auth_request_add_cb(gpointer data);
 void mra_auth_request_cancel_cb(gpointer data);
 void mra_auth_request_cb(gpointer, char *, char *);
 void mra_typing_notify_cb(gpointer, char *);
-void mra_message_cb(gpointer, char *, char *, char *, time_t, gint);
+void mra_message_cb(gpointer, char *, char *, char *, time_t, uint32_t);
 void mra_anketa_info_cb(gpointer, const char *, mra_anketa_info *);
-void mra_mail_notify_cb(gpointer, u_int);
+void mra_mail_notify_cb(gpointer, uint32_t);
 
 void mra_connect_cb(gpointer, gint, const gchar *);
 int mra_send_im(PurpleConnection *, const char *, const char *, PurpleMessageFlags);

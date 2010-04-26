@@ -23,8 +23,8 @@
 
 /////////////////////////////////////XXX///////////////////////////////////////////////////////////
 #define LPS_DEBUG(c, s) (unsigned char) c[s+3], (unsigned char) c[s+2], (unsigned char) c[s+1], (unsigned char) c[s]
-char *debug_data(char *data, int len) {
-    int i;
+char *debug_data(char *data, size_t len) {
+    size_t i;
     char *buffer;
     
     if (!data || len == 0) 
@@ -49,8 +49,8 @@ char *debug_data(char *data, int len) {
     }
     return buffer;
 }
-char *debug_plain(char *data, int len) {
-    int i;
+char *debug_plain(char *data, size_t len) {
+    size_t i;
     char *buffer;
     
     if (!data || len == 0) 
@@ -70,7 +70,7 @@ char *debug_plain(char *data, int len) {
 char *check_p(gpointer data, char *p, char *m, char type)
 {
     mra_serv_conn *mmp = data;
-    unsigned int diff = m - p;
+    size_t diff = m - p;
     if ((type != 'u' && type != 's' && type != 'z') || (type != 'z' && diff < sizeof(u_int))) {
         purple_debug_info("mra", "[%s] Can't parse data\n", __func__);          /* FIXME */
         purple_connection_error_reason(mmp->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Can't parse incoming data"));
@@ -78,9 +78,9 @@ char *check_p(gpointer data, char *p, char *m, char type)
         return NULL;
     }
     if (type == 'u') {
-        return p + sizeof(u_int);
+        return p + sizeof(uint32_t);
     } else if (type == 's') {
-        return p + LPSLENGTH(p) + sizeof(u_int);
+        return p + LPSLENGTH(p) + sizeof(uint32_t);
     } else {
         while (p < m) {
             if (*(p++)=='\0') {
@@ -142,7 +142,7 @@ char *utf8_to_cp1251(const char *text)
 **************************************************************************************************/
 char *to_crlf(const char *text)
 {
-    int n = 0; 
+    size_t n = 0; 
     const gchar *   p;   
     gchar * res; 
     gchar * r; 
@@ -165,12 +165,12 @@ char *to_crlf(const char *text)
 **************************************************************************************************/
 char *mra_net_mklps(const char *sz)
 {
-    unsigned int len;
+    size_t len;
     char *lps = LPSALLOC(strlen(sz));
 
     len = strlen(sz);
-    *((unsigned int *)lps) = len;
-    memcpy(lps + sizeof(unsigned int), sz, strlen(sz));
+    *((size_t *)lps) = len;
+    memcpy(lps + sizeof(uint32_t), sz, strlen(sz));
     return lps;
 }
 
@@ -179,11 +179,11 @@ char *mra_net_mklps(const char *sz)
 **************************************************************************************************/
 char *mra_net_mksz(char *lps)
 {
-    unsigned int len;
+    size_t len;
     char *sz = (char *) malloc(1 + LPSLENGTH(lps));
                          
-    len = *((unsigned int *)lps);
-    memcpy(sz, lps + sizeof(unsigned int), len);
+    len = *((size_t *)lps);
+    memcpy(sz, lps + sizeof(uint32_t), len);
     *(sz + len) = 0;
     return sz;
 }
@@ -191,7 +191,7 @@ char *mra_net_mksz(char *lps)
 /**************************************************************************************************
     Fill client->server header
 **************************************************************************************************/
-void mra_net_fill_cs_header(mrim_packet_header_t *head, u_int seq, u_int msg, u_int len)
+void mra_net_fill_cs_header(mrim_packet_header_t *head, uint32_t seq, uint32_t msg, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
@@ -207,7 +207,7 @@ void mra_net_fill_cs_header(mrim_packet_header_t *head, u_int seq, u_int msg, u_
 /**************************************************************************************************
     Add data to output buffer
 **************************************************************************************************/
-void mra_net_send(gpointer conn, gpointer data, u_int len)
+void mra_net_send(gpointer conn, gpointer data, size_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
     
@@ -282,7 +282,7 @@ gboolean mra_net_send_hello(mra_serv_conn *mmp)
 /**************************************************************************************************
     Send 'authentificate' packet
 **************************************************************************************************/
-gboolean mra_net_send_auth(mra_serv_conn *mmp, const char *username, const char *password, unsigned int status)
+gboolean mra_net_send_auth(mra_serv_conn *mmp, const char *username, const char *password, uint32_t status)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
@@ -290,8 +290,8 @@ gboolean mra_net_send_auth(mra_serv_conn *mmp, const char *username, const char 
     char *username_lps;
     char *password_lps;
     char *desc_lps;
-    unsigned int dw = 0;
-    int i;
+    uint32_t dw = 0;
+    size_t i;
     gboolean ret = FALSE;
     
     // convert username, password and desc to LPS
@@ -299,14 +299,14 @@ gboolean mra_net_send_auth(mra_serv_conn *mmp, const char *username, const char 
     password_lps = mra_net_mklps(password);
     desc_lps     = mra_net_mklps(VERSION_TXT);
 
-    mra_net_fill_cs_header(&head, mmp->seq++, MRIM_CS_LOGIN2, LPSSIZE(username_lps) + LPSSIZE(password_lps) + LPSSIZE(desc_lps) + sizeof(unsigned int) * 6);
+    mra_net_fill_cs_header(&head, mmp->seq++, MRIM_CS_LOGIN2, LPSSIZE(username_lps) + LPSSIZE(password_lps) + LPSSIZE(desc_lps) + sizeof(uint32_t) * 6);
     mra_net_send(mmp, &head,        sizeof(head));
     mra_net_send(mmp, username_lps, LPSSIZE(username_lps));
     mra_net_send(mmp, password_lps, LPSSIZE(password_lps));
     mra_net_send(mmp, &status,      sizeof(status));
     mra_net_send(mmp, desc_lps,     LPSSIZE(desc_lps));
     for (i = 0; i < 5; i++) {
-        mra_net_send(mmp, &dw,          sizeof(dw));
+        mra_net_send(mmp, &dw,      sizeof(dw));
     }
     ret = mra_net_send_flush(mmp);
 
@@ -320,7 +320,7 @@ gboolean mra_net_send_auth(mra_serv_conn *mmp, const char *username, const char 
 /**************************************************************************************************
     Send 'receive ack' packet
 **************************************************************************************************/
-gboolean mra_net_send_receive_ack(mra_serv_conn *mmp, char *from, unsigned int msg_id)
+gboolean mra_net_send_receive_ack(mra_serv_conn *mmp, char *from, uint32_t msg_id)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
@@ -342,7 +342,7 @@ gboolean mra_net_send_receive_ack(mra_serv_conn *mmp, char *from, unsigned int m
 /**************************************************************************************************
     Send 'message' packet
 **************************************************************************************************/
-gboolean mra_net_send_message(mra_serv_conn *mmp, const char *to, const char *message, u_int flags)
+gboolean mra_net_send_message(mra_serv_conn *mmp, const char *to, const char *message, uint32_t flags)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
@@ -352,15 +352,15 @@ gboolean mra_net_send_message(mra_serv_conn *mmp, const char *to, const char *me
     char *message_rtf_lps;
     gboolean ret = FALSE;
     
-//    purple_debug_info("mra", "[ %s ] to: %s\n", __func__, to);                          /* FIXME */
-//    purple_debug_info("mra", "[ %s ] message: %s\n", __func__, message);                /* FIXME */
-//    purple_debug_info("mra", "[ %s ] flags: 0x%X\n", __func__, flags);                    /* FIXME */
+//    purple_debug_info("mra", "[ %s ] to: %s\n", __func__, to);                        /* FIXME */
+//    purple_debug_info("mra", "[ %s ] message: %s\n", __func__, message);              /* FIXME */
+//    purple_debug_info("mra", "[ %s ] flags: 0x%X\n", __func__, flags);                /* FIXME */
 
     to_lps = mra_net_mklps(to);
     message_lps = mra_net_mklps(to_crlf(utf8_to_cp1251(message)));
     message_rtf_lps = mra_net_mklps(to_crlf(utf8_to_cp1251(g_strdup(" "))));
 
-    mra_net_fill_cs_header(&head, mmp->seq++, MRIM_CS_MESSAGE, sizeof(u_int) + LPSSIZE(to_lps) + LPSSIZE(message_lps) + LPSSIZE(message_rtf_lps));
+    mra_net_fill_cs_header(&head, mmp->seq++, MRIM_CS_MESSAGE, sizeof(uint32_t) + LPSSIZE(to_lps) + LPSSIZE(message_lps) + LPSSIZE(message_rtf_lps));
     mra_net_send(mmp, &head,  sizeof(head));
     mra_net_send(mmp, &flags, sizeof(flags));
     mra_net_send(mmp, to_lps, LPSSIZE(to_lps));
@@ -386,14 +386,14 @@ gboolean mra_net_send_typing(mra_serv_conn *mmp, const char *to)
     char *to_lps;
     char *message_lps;
     char *message_rtf_lps;
-    u_int flags = MESSAGE_FLAG_NOTIFY;
+    uint32_t flags = MESSAGE_FLAG_NOTIFY;
     gboolean ret = FALSE;
 
     to_lps = mra_net_mklps(to);
     message_lps = mra_net_mklps(to_crlf(utf8_to_cp1251(" ")));
     message_rtf_lps = mra_net_mklps(to_crlf(utf8_to_cp1251(" ")));
 
-    mra_net_fill_cs_header(&head, mmp->seq++, MRIM_CS_MESSAGE, sizeof(u_int) + LPSSIZE(to_lps) + LPSSIZE(message_lps) + LPSSIZE(message_rtf_lps));
+    mra_net_fill_cs_header(&head, mmp->seq++, MRIM_CS_MESSAGE, sizeof(uint32_t) + LPSSIZE(to_lps) + LPSSIZE(message_lps) + LPSSIZE(message_rtf_lps));
     mra_net_send(mmp, &head,  sizeof(head));
     mra_net_send(mmp, &flags, sizeof(flags));
     mra_net_send(mmp, to_lps, LPSSIZE(to_lps));
@@ -451,7 +451,7 @@ gboolean mra_net_send_authorize_user(mra_serv_conn *mmp, char *email)
 /**************************************************************************************************
     Send 'add user into contact list' packet
 **************************************************************************************************/
-gboolean mra_net_send_add_user(mra_serv_conn *mmp, char *email, char *name, u_int group_id, u_int flags)
+gboolean mra_net_send_add_user(mra_serv_conn *mmp, char *email, char *name, uint32_t group_id, uint32_t flags)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
     
@@ -484,7 +484,7 @@ gboolean mra_net_send_add_user(mra_serv_conn *mmp, char *email, char *name, u_in
 /**************************************************************************************************
     Send 'change user' packet
 **************************************************************************************************/
-gboolean mra_net_send_change_user(mra_serv_conn *mmp, unsigned int user_id, unsigned int group_id, char *email, char *name, unsigned int flags)
+gboolean mra_net_send_change_user(mra_serv_conn *mmp, uint32_t user_id, uint32_t group_id, char *email, char *name, uint32_t flags)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
     
@@ -518,7 +518,7 @@ gboolean mra_net_send_change_user(mra_serv_conn *mmp, unsigned int user_id, unsi
 /**************************************************************************************************
     Send 'set status' packet
 **************************************************************************************************/
-gboolean mra_net_send_status(mra_serv_conn *mmp, unsigned int status)
+gboolean mra_net_send_status(mra_serv_conn *mmp, uint32_t status)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
@@ -543,9 +543,9 @@ gboolean mra_net_send_anketa_info(mra_serv_conn *mmp, const char *who)
 	char *user_lps;
 	char *domain_lps;
 
-	int user_len;
-	int domain_len;
-	int param = 0;
+	size_t user_len;
+	size_t domain_len;
+	uint32_t param = 0;
 
     gboolean ret = FALSE;
     mrim_packet_header_t head;
@@ -640,7 +640,7 @@ gboolean mra_net_read_proceed(gpointer data)
     
     mra_serv_conn *mmp = data;
     mrim_packet_header_t *head;
-    unsigned int packet_len = 0;
+    size_t packet_len = 0;
     char *answer;
     char *next_packet;
 
@@ -661,7 +661,7 @@ gboolean mra_net_read_proceed(gpointer data)
     // check if we have correct magic
     if (head->magic != CS_MAGIC) {
         purple_debug_info("mra", "[%s] wrong magic: 0x%08x\n", 
-                          __func__, (unsigned int) head->magic);                        /* FIXME */
+                          __func__, (uint32_t) head->magic);                            /* FIXME */
         purple_debug_info("mra", "data: %s\n", debug_plain(mmp->rx_buf, mmp->rx_len));  /* FIXME */
         //TODO: we need to cut wrong data from input buffer here
         purple_connection_error_reason(mmp->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Received data is not MRIM packet"));
@@ -671,7 +671,7 @@ gboolean mra_net_read_proceed(gpointer data)
     packet_len = sizeof(mrim_packet_header_t) + head->dlen;
         
     purple_debug_info("mra", "[%s] received packet is 0x%08x (length: %d, buf len: %d)\n", 
-                  __func__, (unsigned int) head->msg, packet_len, mmp->rx_len);         /* FIXME */
+                  __func__, (uint32_t) head->msg, packet_len, mmp->rx_len);             /* FIXME */
     
     purple_debug_info("mra", "read: %s\n", debug_data(mmp->rx_buf, packet_len));        /* FIXME */
 
@@ -775,17 +775,17 @@ gboolean mra_net_read_proceed(gpointer data)
 /**************************************************************************************************
     Read 'hello' packet
 **************************************************************************************************/
-void mra_net_read_hello(gpointer data, char *answer, int len)
+void mra_net_read_hello(gpointer data, char *answer, size_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
     UNUSED(len);
 
     mra_serv_conn *mmp = data;
-    unsigned int ping_timeout;
+    uint32_t ping_timeout;
 
     // get ping timeout value
-    ping_timeout = *(unsigned int *) answer;
+    ping_timeout = *(uint32_t *) answer;
     
     // check if ping timeout value is correct
     if (ping_timeout <= 0 || ping_timeout > 3600) {
@@ -807,7 +807,7 @@ void mra_net_read_hello(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'login successful' packet
 **************************************************************************************************/
-void mra_net_read_login_successful(gpointer data, char *answer, int len)
+void mra_net_read_login_successful(gpointer data, char *answer, size_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
@@ -821,7 +821,7 @@ void mra_net_read_login_successful(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'login failed' packet
 **************************************************************************************************/
-void mra_net_read_login_failed(gpointer data, char *answer, int len)
+void mra_net_read_login_failed(gpointer data, char *answer, size_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
@@ -840,7 +840,7 @@ void mra_net_read_login_failed(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'logout' packet
 **************************************************************************************************/
-void mra_net_read_logout(gpointer data, char *answer, int len)
+void mra_net_read_logout(gpointer data, char *answer, size_t len)
 {           
     purple_debug_info("mra", "== %s ==\n", __func__);
 
@@ -859,7 +859,7 @@ void mra_net_read_logout(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'user info' packet
 **************************************************************************************************/
-void mra_net_read_user_info(gpointer data, char *answer, int len)
+void mra_net_read_user_info(gpointer data, char *answer, size_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
     
@@ -898,37 +898,37 @@ void mra_net_read_user_info(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'contact list' packet
 **************************************************************************************************/
-void mra_net_read_contact_list(gpointer data, char *answer, int len)
+void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
 {           
     purple_debug_info("mra", "== %s ==\n", __func__);
     
     mra_serv_conn *mmp = data;
     mra_group *groups = NULL;
     mra_contact *contacts = NULL;
-    unsigned int i, j;
+    size_t i, j;
     char *p;
-    unsigned int status;
-    unsigned int groups_count;
+    uint32_t status;
+    uint32_t groups_count;
     char *group_mask;
     char *contact_mask;
     const char *known_group_mask = "us";
     const char *known_contact_mask = "uussuu";
-    u_int flags;
-    u_int intflags;
-    u_int user_status;
+    uint32_t flags;
+    uint32_t intflags;
+    uint32_t user_status;
     char *name;
     char *email;
-    unsigned int group_id;
-    unsigned int contact_group_id;
-    unsigned int group_cnt = 0;
-    unsigned int contact_cnt = 0;
+    uint32_t group_id;
+    uint32_t contact_group_id;
+    size_t group_cnt = 0;
+    size_t contact_cnt = 0;
     gboolean skip_user;
 
     p = answer;
 
     // get status of contact list loading
     status = LPSLENGTH(p);
-    p += sizeof(u_int);
+    p += sizeof(uint32_t);
     purple_debug_info("mra", "[%s] contacts read status: %d\n", __func__, status);      /* FIXME */
     // return error to callback if something wrong
     if (status != GET_CONTACTS_OK) {
@@ -939,19 +939,19 @@ void mra_net_read_contact_list(gpointer data, char *answer, int len)
     // get groups count
     check_p(mmp, p, answer, 'u');
     groups_count = LPSLENGTH(p);
-    p += sizeof(u_int);
+    p += sizeof(uint32_t);
     purple_debug_info("mra", "[%s] groups count: %d\n", __func__, groups_count);        /* FIXME */
     
     // get group mask
     check_p(mmp, p, answer, 's');
     group_mask = mra_net_mksz(p);
-    p += LPSLENGTH(p) + sizeof(u_int);
+    p += LPSLENGTH(p) + sizeof(uint32_t);
     purple_debug_info("mra", "[%s] group mask: %s\n", __func__, group_mask);            /* FIXME */
 
     // get contact mask
     check_p(mmp, p, answer, 's');
     contact_mask = mra_net_mksz(p);
-    p += LPSLENGTH(p) + sizeof(u_int);
+    p += LPSLENGTH(p) + sizeof(uint32_t);
     purple_debug_info("mra", "[%s] contact mask: %s\n", __func__, contact_mask);        /* FIXME */
 
     // check if we know group and contact masks
@@ -965,13 +965,13 @@ void mra_net_read_contact_list(gpointer data, char *answer, int len)
     for(i = 0; i < groups_count; i++) {
         // get group flags
         check_p(mmp, p, answer, 'u');
-        flags = *(u_int *) p;
-        p += sizeof(u_int);
+        flags = *(uint32_t *) p;
+        p += sizeof(uint32_t);
 
         // get group name
         check_p(mmp, p, answer, 's');
         name = cp1251_to_utf8(mra_net_mksz(p));
-        p += LPSLENGTH(p) + sizeof(u_int);
+        p += LPSLENGTH(p) + sizeof(uint32_t);
 
         // check all data
         j = strlen(known_group_mask);
@@ -996,33 +996,33 @@ void mra_net_read_contact_list(gpointer data, char *answer, int len)
     while (p < answer + len) {
         // get contact flags
         check_p(mmp, p, answer, 'u');
-        flags = *(u_int *) p;
-        p += sizeof(u_int);
+        flags = *(uint32_t *) p;
+        p += sizeof(uint32_t);
 
         // get contact group
         check_p(mmp, p, answer, 'u');
-        group_id = *(u_int *) p;
-        p += sizeof(u_int);
+        group_id = *(uint32_t *) p;
+        p += sizeof(uint32_t);
 
         // get contact address
         check_p(mmp, p, answer, 's');
         email = mra_net_mksz(p);
-        p += LPSLENGTH(p) + sizeof(u_int);
+        p += LPSLENGTH(p) + sizeof(uint32_t);
 
         // get contact nickname
         check_p(mmp, p, answer, 's');
         name = cp1251_to_utf8(mra_net_mksz(p));
-        p += LPSLENGTH(p) + sizeof(u_int);
+        p += LPSLENGTH(p) + sizeof(uint32_t);
 
         // get contact internal flags
         check_p(mmp, p, answer, 'u');
-        intflags = *(u_int *) p;
-        p += sizeof(u_int);
+        intflags = *(uint32_t *) p;
+        p += sizeof(uint32_t);
 
         // get contact status
         check_p(mmp, p, answer, 'u');
-        user_status = *(u_int *) p;
-        p += sizeof(u_int);
+        user_status = *(uint32_t *) p;
+        p += sizeof(uint32_t);
 
         // check all data
         j = strlen(known_contact_mask);
@@ -1086,19 +1086,19 @@ void mra_net_read_contact_list(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'user status' packet
 **************************************************************************************************/
-void mra_net_read_user_status(gpointer data, char *answer, int len)
+void mra_net_read_user_status(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
     UNUSED(len);
     
     mra_serv_conn *mmp = data;
-    u_int status;
+    uint32_t status;
     char *email;
 
     // get status and email
-    status = *(u_int *) answer;
-    answer += sizeof(u_int);
+    status = *(uint32_t *) answer;
+    answer += sizeof(uint32_t);
     email = mra_net_mksz(answer);
 
     purple_debug_info("mra", "[%s] contact %s new status: 0x%08x\n", 
@@ -1113,24 +1113,24 @@ void mra_net_read_user_status(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'message' packet
 **************************************************************************************************/
-void mra_net_read_message(gpointer data, char *answer, int len)
+void mra_net_read_message(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
     UNUSED(len);
                 
     mra_serv_conn *mmp = data;
-    u_int msg_id;
-    u_int flags;
+    uint32_t msg_id;
+    uint32_t flags;
     char *from;
     char *message;
     char *message_rtf;
 
     // parse data
-    msg_id = *(u_int *) answer;
-    answer += sizeof(u_int);
-    flags = *(u_int *) answer;
-    answer += sizeof(u_int);
+    msg_id = *(uint32_t *) answer;
+    answer += sizeof(uint32_t);
+    flags = *(uint32_t *) answer;
+    answer += sizeof(uint32_t);
     from = mra_net_mksz(answer);
     answer += LPSSIZE(answer);
     message = cp1251_to_utf8(mra_net_mksz(answer));
@@ -1188,18 +1188,18 @@ void mra_net_read_message(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'message status' packet
 **************************************************************************************************/
-void mra_net_read_message_status(gpointer data, char *answer, int len)
+void mra_net_read_message_status(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
     UNUSED(len);
 
     mra_serv_conn *mmp = data;
-	u_int status;
+	uint32_t status;
     gchar *buf;
 
-    status = *(u_int *) answer;
-    answer += sizeof(u_int);
+    status = *(uint32_t *) answer;
+    answer += sizeof(uint32_t);
 
     if (status > 0) {
         switch (status) {
@@ -1233,7 +1233,7 @@ void mra_net_read_message_status(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'message offline' packet
 **************************************************************************************************/
-void mra_net_read_message_offline(gpointer data, char *answer, int len)
+void mra_net_read_message_offline(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
@@ -1249,7 +1249,7 @@ void mra_net_read_message_offline(gpointer data, char *answer, int len)
     char *date;
     char *sflags;
     char *boundary;
-    u_int flags;
+    uint32_t flags;
     struct tm tm;
     time_t time;
     char *oldlocale;
@@ -1346,7 +1346,7 @@ void mra_net_read_message_offline(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'add new contact ack' packet
 **************************************************************************************************/
-void mra_net_read_add_contact_ack(gpointer data, char *answer, int len)
+void mra_net_read_add_contact_ack(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
@@ -1360,7 +1360,7 @@ void mra_net_read_add_contact_ack(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'modify contact ack' packet
 **************************************************************************************************/
-void mra_net_read_modify_contact_ack(gpointer data, char *answer, int len)
+void mra_net_read_modify_contact_ack(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
@@ -1374,7 +1374,7 @@ void mra_net_read_modify_contact_ack(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'auth ack' packet
 **************************************************************************************************/
-void mra_net_read_auth_ack(gpointer data, char *answer, int len)
+void mra_net_read_auth_ack(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
@@ -1388,45 +1388,45 @@ void mra_net_read_auth_ack(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'anketa info' packet
 **************************************************************************************************/
-void mra_net_read_anketa_info(gpointer data, char *answer, int len)
+void mra_net_read_anketa_info(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);		/* FIXME */
 
     UNUSED(len);
 
-	int i = 0;
+	uint32_t i = 0;
     mra_serv_conn *mmp = data;
-    u_int status;
-    u_int fields_num;
-    u_int max_rows;
-    u_int server_time;
+    uint32_t status;
+    uint32_t fields_num;
+    uint32_t max_rows;
+    uint32_t server_time;
 	mra_anketa_info mai;
 
 	memset(&mai, 0, sizeof(mai));
 
     // get status
-    status = *(u_int *) answer;
+    status = *(uint32_t *) answer;
     answer += sizeof(status);
 
     // get fields_num
-    fields_num = *(u_int *) answer;
+    fields_num = *(uint32_t *) answer;
     answer += sizeof(fields_num);
 
     // get max_rows
-    max_rows = *(u_int *) answer;
+    max_rows = *(uint32_t *) answer;
     answer += sizeof(max_rows);
 
     // get server_time
-    server_time = *(u_int *) answer;
+    server_time = *(uint32_t *) answer;
     answer += sizeof(server_time);
 
-	for (i = 0; i < (int) fields_num; i++) {
-		int j;
+	for (i = 0; i < fields_num; i++) {
+		uint32_t j;
 		char *key;
 		char *val;
 		char *answer_temp;
 
-		for (j = 0, answer_temp = answer; j < (int) fields_num; j++)
+		for (j = 0, answer_temp = answer; j < fields_num; j++)
 			answer_temp += LPSSIZE(answer_temp);
 
 		key = cp1251_to_utf8(mra_net_mksz(answer));
@@ -1503,17 +1503,17 @@ void mra_net_read_anketa_info(gpointer data, char *answer, int len)
 /**************************************************************************************************
     Read 'mailbox status' packet
 **************************************************************************************************/
-void mra_net_read_mailbox_status(gpointer data, char *answer, int len)
+void mra_net_read_mailbox_status(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
 
     UNUSED(len);
 
     mra_serv_conn *mmp = data;
-	u_int status;
+	uint32_t status;
 
-    status = *(u_int *) answer;
-    answer += sizeof(u_int);
+    status = *(uint32_t *) answer;
+    answer += sizeof(uint32_t);
 
 	mmp->callback_mail_notify(mmp, status);
 }
