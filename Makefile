@@ -11,10 +11,10 @@ MRA_SOURCES =     \
 all:	release
 
 install:
-	cp libmra.so /usr/lib/purple-2/
-	cp img/mra16.png /usr/share/pixmaps/pidgin/protocols/16/mra.png
-	cp img/mra22.png /usr/share/pixmaps/pidgin/protocols/22/mra.png
-	cp img/mra48.png /usr/share/pixmaps/pidgin/protocols/48/mra.png
+	install libmra.so /usr/lib/purple-2/
+	install img/mra16.png /usr/share/pixmaps/pidgin/protocols/16/mra.png
+	install img/mra22.png /usr/share/pixmaps/pidgin/protocols/22/mra.png
+	install img/mra48.png /usr/share/pixmaps/pidgin/protocols/48/mra.png
 
 uninstall:
 	rm -f /usr/lib/purple-2/libmra.so
