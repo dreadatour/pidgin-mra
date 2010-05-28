@@ -380,7 +380,7 @@ void mra_message_cb(gpointer data, char *from, char *message, char *message_rtf,
         conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, mmp->acct, from);
     }
 
-    purple_conversation_write(conv, from, message, PURPLE_MESSAGE_RECV, time);
+    purple_conversation_write(conv, from, purple_markup_escape_text(message, strlen(message)), PURPLE_MESSAGE_RECV, time);
 }
 
 /**************************************************************************************************
