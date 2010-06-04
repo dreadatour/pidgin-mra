@@ -1033,8 +1033,8 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
         while (j < strlen(contact_mask))
             p = check_p(mmp, p, answer, contact_mask[j++]);
             
-        purple_debug_info("mra", "[%s] contact %s (%s), flags: 0x%08x, group: %d, status: 0x%08x\n", 
-                              __func__, name, email, flags, group_id, user_status);     /* FIXME */
+        purple_debug_info("mra", "[%s] contact %s (%s), flags: 0x%08x, id: %d, group: %d, status: 0x%08x\n", 
+                              __func__, name, email, flags, contact_id + MAX_GROUP, group_id, user_status);     /* FIXME */
 
         // push contact into contact array if contact is active
         if (!(flags & CONTACT_FLAG_REMOVED) && !(flags & CONTACT_FLAG_SHADOW)) {
@@ -1067,7 +1067,7 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
             }
 
             purple_debug_info("mra", "[%s] is enabled (id: %d)\n", 
-                              __func__, contact_cnt + MAX_GROUP);                       /* FIXME */
+                              __func__, contact_id + MAX_GROUP);                       /* FIXME */
             contacts = (mra_contact *) g_realloc(contacts, (contact_cnt + 1) * sizeof(mra_contact));
             contacts[contact_cnt].id = contact_id + MAX_GROUP;
             contacts[contact_cnt].email = g_strdup(email);
