@@ -918,6 +918,7 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
     uint32_t user_status;
     char *name;
     char *email;
+    uint32_t contact_id;
     uint32_t group_id;
     uint32_t contact_group_id;
     size_t group_cnt = 0;
@@ -962,6 +963,7 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
     }
 
     // get all groups data
+    group_id = 0;
     for(i = 0; i < groups_count; i++) {
         // get group flags
         check_p(mmp, p, answer, 'u');
@@ -985,14 +987,16 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
         if(!(flags & CONTACT_FLAG_REMOVED)) {
             purple_debug_info("mra", "[%s] is enabled (id: %d)\n", __func__, i);        /* FIXME */
             groups = (mra_group *) g_realloc(groups, (group_cnt + 1) * sizeof(mra_group));
-            groups[group_cnt].id = i;
+            groups[group_cnt].id = group_id;
             groups[group_cnt].name = g_strdup(name);
             groups[group_cnt].flags = flags;
             group_cnt++;
         }
+        group_id++;
     }
 
     // get all contacts data
+    contact_id = 0;
     while (p < answer + len) {
         // get contact flags
         check_p(mmp, p, answer, 'u');
@@ -1065,7 +1069,7 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
             purple_debug_info("mra", "[%s] is enabled (id: %d)\n", 
                               __func__, contact_cnt + MAX_GROUP);                       /* FIXME */
             contacts = (mra_contact *) g_realloc(contacts, (contact_cnt + 1) * sizeof(mra_contact));
-            contacts[contact_cnt].id = contact_cnt + MAX_GROUP;
+            contacts[contact_cnt].id = contact_id + MAX_GROUP;
             contacts[contact_cnt].email = g_strdup(email);
             contacts[contact_cnt].nickname = g_strdup(name);
             contacts[contact_cnt].flags = flags;
@@ -1076,6 +1080,7 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
         }   
         g_free(email);
         g_free(name);
+        contact_id++;
     }   
     g_free(group_mask);
     g_free(contact_mask);
