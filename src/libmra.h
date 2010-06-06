@@ -89,12 +89,15 @@ typedef struct _mra_contact {
     uint32_t flags;
     uint32_t group_id;
     uint32_t intflags;
+    gboolean removed;
+    gboolean skip_user;
 } mra_contact;
 
 typedef struct _mra_group {
     uint32_t id; 
     gchar *name;
     uint32_t flags;
+    gboolean removed;
 } mra_group;
 
 typedef struct _mra_auth_request {
@@ -150,9 +153,13 @@ void mra_login(PurpleAccount *);
 void mra_close(PurpleConnection *);
 void mra_get_anketa(PurpleConnection *, const char *);
 
+void mra_rerequest_auth(PurpleBlistNode *, gpointer);
+GList *mra_buddy_menu(PurpleBuddy *);
+GList *mra_blist_node_menu(PurpleBlistNode *);
 GList *mra_statuses(PurpleAccount *);
 void mra_set_status_cb(PurplePluginAction *);
 GList *mra_actions(PurplePlugin *, gpointer);
+const char *mralist_emblem(PurpleBuddy *);
 char *mra_status_text(PurpleBuddy *);
 
 gboolean plugin_load(PurplePlugin *);

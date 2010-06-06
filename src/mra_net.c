@@ -918,7 +918,6 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
     uint32_t user_status;
     char *name;
     char *email;
-    uint32_t contact_id;
     uint32_t group_id;
     uint32_t contact_group_id;
     size_t group_cnt = 0;
@@ -963,7 +962,6 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
     }
 
     // get all groups data
-    group_id = 0;
     for(i = 0; i < groups_count; i++) {
         // get group flags
         check_p(mmp, p, answer, 'u');
@@ -980,23 +978,24 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
         while (j < strlen(group_mask))
             p = check_p(mmp, p, answer, group_mask[j++]);
 
-        purple_debug_info("mra", "[%s] group %s, flags: %08x\n", __func__, name, flags);/* FIXME */
+        purple_debug_info("mra", "[%s] group %s, id %d, flags: %08x\n", __func__, name, i, flags);
+                                                                                        /* FIXME */
         
         // push group into groups array if group is active
         flags &= 0x00FFFFFF;
-        if(!(flags & CONTACT_FLAG_REMOVED)) {
-            purple_debug_info("mra", "[%s] is enabled (id: %d)\n", __func__, i);        /* FIXME */
-            groups = (mra_group *) g_realloc(groups, (group_cnt + 1) * sizeof(mra_group));
-            groups[group_cnt].id = group_id;
-            groups[group_cnt].name = g_strdup(name);
-            groups[group_cnt].flags = flags;
-            group_cnt++;
+            
+        groups = (mra_group *) g_realloc(groups, (i + 1) * sizeof(mra_group));
+        groups[i].id = i;
+        groups[i].name = g_strdup(name);
+        groups[i].flags = flags;
+        groups[i].removed = FALSE;
+        if(flags & CONTACT_FLAG_REMOVED) {
+            purple_debug_info("mra", "[%s] is enabled\n", __func__);                    /* FIXME */
+            groups[i].flags = TRUE;
         }
-        group_id++;
     }
 
     // get all contacts data
-    contact_id = 0;
     while (p < answer + len) {
         // get contact flags
         check_p(mmp, p, answer, 'u');
@@ -1033,54 +1032,55 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
         while (j < strlen(contact_mask))
             p = check_p(mmp, p, answer, contact_mask[j++]);
             
-        purple_debug_info("mra", "[%s] contact %s (%s), flags: 0x%08x, id: %d, group: %d, status: 0x%08x\n", 
-                              __func__, name, email, flags, contact_id + MAX_GROUP, group_id, user_status);     /* FIXME */
+        purple_debug_info("mra", "[%s] contact %s (%s), flags: 0x%08x, intflags: 0x%08x, id: %d, group: %d, status: 0x%08x\n", 
+                              __func__, name, email, flags, intflags, contact_cnt + MAX_GROUP, group_id, user_status);     
+                                                                                        /* FIXME */
 
+        // skip contact if something wrong with email
+        if (strstr(email, "@") == NULL) {
+            purple_debug_info("mra", "[%s] email is very strange. we will skip it until we don't know, what to do\n",
+                              __func__);                                                /* FIXME */
+            continue;
+        }
+        
+        // TODO: skip contact if it is duplicate
+        skip_user = FALSE;
+        for (i = 0; i < contact_cnt; i++) {
+            if (strcmp(email, contacts[i].email) == 0) {
+                purple_debug_info("mra", "[%s] skip user %s\n", __func__, email);       /* FIXME */
+                skip_user = TRUE;
+                break;
+            }
+        }
+
+        // set default contact group
+        contact_group_id = 0;
+        // search for contact group
+        for (i = 0; i < group_cnt; i++) {
+            if (groups[i].id == group_id) {
+                contact_group_id = group_id;
+            }
+        }
+
+        purple_debug_info("mra", "[%s] is enabled (id: %d)\n", 
+                          __func__, contact_cnt + MAX_GROUP);                           /* FIXME */
+        contacts = (mra_contact *) g_realloc(contacts, (contact_cnt + 1) * sizeof(mra_contact));
+        contacts[contact_cnt].id = contact_cnt + MAX_GROUP;
+        contacts[contact_cnt].email = g_strdup(email);
+        contacts[contact_cnt].nickname = g_strdup(name);
+        contacts[contact_cnt].flags = flags;
+        contacts[contact_cnt].group_id = contact_group_id;
+        contacts[contact_cnt].intflags = intflags;
+        contacts[contact_cnt].status = user_status;
+        contacts[contact_cnt].skip_user = skip_user;
+        contacts[contact_cnt].removed = FALSE;
         // push contact into contact array if contact is active
-        if (!(flags & CONTACT_FLAG_REMOVED) && !(flags & CONTACT_FLAG_SHADOW)) {
-            // skip contact if something wrong with email
-            if (strstr(email, "@") == NULL) {
-                purple_debug_info("mra", "[%s] email is very strange. we will skip it until we don't know, what to do\n",
-                                  __func__);                                            /* FIXME */
-                continue;
-            }
-            
-            // TODO: skip contact if it is duplicate
-            skip_user = FALSE;
-            for (i = 0; i < contact_cnt; i++) {
-                if (strcmp(email, contacts[i].email) == 0) {
-                    purple_debug_info("mra", "[%s] skip user %s\n", __func__, email);   /* FIXME */
-                    skip_user = TRUE;
-                    break;
-                }
-            }
-            if (skip_user)
-                continue;
-
-            // set default contact group
-            contact_group_id = 0;
-            // search for contact group
-            for (i = 0; i < group_cnt; i++) {
-                if (groups[i].id == group_id) {
-                    contact_group_id = group_id;
-                }
-            }
-
-            purple_debug_info("mra", "[%s] is enabled (id: %d)\n", 
-                              __func__, contact_id + MAX_GROUP);                       /* FIXME */
-            contacts = (mra_contact *) g_realloc(contacts, (contact_cnt + 1) * sizeof(mra_contact));
-            contacts[contact_cnt].id = contact_id + MAX_GROUP;
-            contacts[contact_cnt].email = g_strdup(email);
-            contacts[contact_cnt].nickname = g_strdup(name);
-            contacts[contact_cnt].flags = flags;
-            contacts[contact_cnt].group_id = contact_group_id;
-            contacts[contact_cnt].intflags = intflags;
-            contacts[contact_cnt].status = user_status;
-            contact_cnt++;
+        if (flags & CONTACT_FLAG_REMOVED || flags & CONTACT_FLAG_SHADOW) {
+            contacts[contact_cnt].removed = TRUE;
         }   
+        contact_cnt++;
         g_free(email);
         g_free(name);
-        contact_id++;
     }   
     g_free(group_mask);
     g_free(contact_mask);

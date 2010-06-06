@@ -201,10 +201,14 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
     for (i = 0; i < group_cnt; i++) {
         purple_debug_info("mra", "[%s] group %s (%d)\n", 
                           __func__, groups[i].name, groups[i].id);                      /* FIXME */
-
+        
+        if (groups[i].removed) {
+            continue;
+        }
+        
         // insert group into groups hash
         g_hash_table_insert(mmp->groups, g_strdup_printf("%d", groups[i].id), groups[i].name);
-
+        
         // add group into pidgin, if not exists
         if ((purple_find_group(groups[i].name)) == NULL) {
             PurpleGroup *g = purple_group_new(groups[i].name);
@@ -216,11 +220,26 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
     for (i = 0; i < contact_cnt; i++) {
         purple_debug_info("mra", "[%s] user %s (%d)\n", 
                           __func__, contacts[i].email, contacts[i].id);                 /* FIXME */
+        
+        buddy = purple_find_buddy(mmp->acct, contacts[i].email);
        
+        if (contacts[i].intflags & CONTACT_INTFLAG_NOT_AUTHORIZED) {
+            g_hash_table_insert(mmp->users_not_authorized, contacts[i].email, "TRUE");
+        }
+
+        if (contacts[i].removed || contacts[i].skip_user) {
+            if (buddy != NULL) {
+                purple_blist_remove_buddy(buddy);
+            }
+            continue;
+        }
+        
         g_hash_table_insert(mmp->users, contacts[i].email, g_strdup_printf("%d", contacts[i].id));
 
+        purple_debug_info("mra", "[%s] go\n", __func__);                                /* FIXME */
+
         // add user into pidgin, if user not found
-        if (purple_find_buddy(mmp->acct, contacts[i].email) == NULL) {
+        if (buddy == NULL) {
             // get group name by id
             group = g_hash_table_lookup(mmp->groups, g_strdup_printf("%d", contacts[i].group_id));
 
@@ -241,9 +260,6 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
 
             // add buddy into pidgin
             purple_blist_add_buddy(buddy, NULL, g, NULL);
-
-        } else {
-            buddy = purple_find_buddy(mmp->acct, contacts[i].email);
         }
 
         // set buddy status
@@ -765,6 +781,7 @@ void mra_login(PurpleAccount *acct)
     mmp->authorized = FALSE;
     mmp->seq = 0;
     mmp->users = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    mmp->users_not_authorized = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     mmp->groups = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     mmp->tx_buf = (char *) malloc(MRA_BUF_LEN + 1);
     mmp->tx_len = 0;
@@ -825,6 +842,97 @@ void mra_close(PurpleConnection *gc)
 
     purple_debug_error("mra", "[%s] connection was closed\n", __func__);                /* FIXME */
 }
+
+/**************************************************************************************************
+    Rerequest auth
+**************************************************************************************************/
+void
+mra_rerequest_auth(PurpleBlistNode *node, gpointer ignored) {
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+    
+    UNUSED(ignored);
+
+    PurpleBuddy *buddy;
+    PurpleGroup *group;
+    PurpleConnection *gc;
+    mra_serv_conn *mmp;
+    const char *email;
+    mra_add_buddy_req *data;
+    
+    buddy = (PurpleBuddy *) node;
+    group = purple_buddy_get_group(buddy);
+
+    gc = purple_account_get_connection(purple_buddy_get_account(buddy));
+    if (!gc) {
+        return;
+    }
+
+    mmp = gc->proto_data;
+    email = purple_buddy_get_name(buddy);
+
+    data = g_new0(mra_add_buddy_req, 1);
+    data->pc = gc;
+    data->buddy = buddy;
+    data->group = group;
+
+    purple_request_input(gc, NULL, _("Authorization Request Message:"),
+                         NULL, _("Please authorize me!"), TRUE, FALSE, NULL,
+                         _("_OK"), G_CALLBACK(mra_add_buddy_ok_cb),
+                         _("_Cancel"), NULL,
+                         purple_connection_get_account(gc), email, NULL, data);
+}
+
+/**************************************************************************************************
+    Buddy menu
+**************************************************************************************************/
+GList *
+mra_buddy_menu(PurpleBuddy *buddy) {
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+    PurpleConnection *gc;
+    mra_serv_conn *mmp;
+    GList *menu;
+    PurpleMenuAction *act;
+    char *email;
+    char *not_authorized;
+    char *user_id;
+
+    gc = purple_account_get_connection(purple_buddy_get_account(buddy));
+    if (!gc) {
+        return NULL;
+    }
+
+    menu = NULL;
+
+    mmp = gc->proto_data;
+    email = (char *) purple_buddy_get_name(buddy);
+    not_authorized = g_hash_table_lookup(mmp->users_not_authorized, email);
+    user_id = g_hash_table_lookup(mmp->users, email);
+    
+    if (user_id == NULL || not_authorized != NULL) {
+        purple_debug_info("mra", "[%s] user %s is not authorized\n", __func__, email);  /* FIXME */
+        
+        act = purple_menu_action_new(_("Re-request Authorization"), PURPLE_CALLBACK(mra_rerequest_auth), NULL, NULL);
+        menu = g_list_prepend(menu, act);
+    }
+    menu = g_list_reverse(menu);
+        
+    return menu;
+}
+
+/**************************************************************************************************
+    Add buddy menu
+**************************************************************************************************/
+GList *mra_blist_node_menu(PurpleBlistNode *node) {
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+    
+    if (PURPLE_BLIST_NODE_IS_BUDDY(node)) {
+        return mra_buddy_menu((PurpleBuddy *) node);
+    } else {
+        return NULL;
+    }
+}
+
 
 /**************************************************************************************************
     Add statuses types
@@ -926,6 +1034,40 @@ static const char *mra_list_icon(PurpleAccount *account, PurpleBuddy *buddy)
 }
 
 /**************************************************************************************************
+    List of emblems
+**************************************************************************************************/
+const char *mra_list_emblem(PurpleBuddy *buddy)
+{
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+    PurpleConnection *gc;
+    mra_serv_conn *mmp;
+    char *email;
+    char *not_authorized;
+    char *user_id;
+
+    gc = purple_account_get_connection(purple_buddy_get_account(buddy));
+    if (!gc) {
+        return NULL;
+    }
+
+    mmp = gc->proto_data;
+    email = (char *) purple_buddy_get_name(buddy);
+    not_authorized = g_hash_table_lookup(mmp->users_not_authorized, email);
+    user_id = g_hash_table_lookup(mmp->users, email);
+    
+    purple_debug_info("mra", "[%s] get %s emblem: %s, id: %s\n", __func__, email, not_authorized, user_id);                 
+                                                                                        /* FIXME */
+
+    if (user_id == NULL || not_authorized != NULL) {
+        purple_debug_info("mra", "[%s] user %s is not authorized\n", __func__, email);  /* FIXME */
+        return "not-authorized";
+    }
+        
+    return NULL;
+}
+
+/**************************************************************************************************
 	Status text
 **************************************************************************************************/
 char *mra_status_text(PurpleBuddy *buddy)
@@ -1006,11 +1148,11 @@ static PurplePluginProtocolInfo prpl_info = {
 	NULL,                                           // protocol_options
 	{"jpg",0,0,50,50,-1,PURPLE_ICON_SCALE_SEND},    // icon_spec
 	mra_list_icon,                                  // list_icon
-	NULL,                                           // list_emblems
+	mra_list_emblem,                                // list_emblems
 	mra_status_text,                                // status_text
 	NULL,                                           // tooltip_text
 	mra_statuses,                                   // status_types
-	NULL,                                           // blist_node_menu
+	mra_blist_node_menu,                            // blist_node_menu
 	NULL,                                           // chat_info
 	NULL,                                           // chat_info_defaults
 	mra_login,                                      // login
