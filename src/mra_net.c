@@ -1354,11 +1354,49 @@ void mra_net_read_message_offline(gpointer data, char *answer, uint32_t len)
 void mra_net_read_add_contact_ack(gpointer data, char *answer, uint32_t len)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);
-
-    UNUSED(data);
-    UNUSED(answer);
+    
     UNUSED(len);
                 
+    mra_serv_conn *mmp = data;
+    uint32_t status;
+    uint32_t user_id;
+    gchar *buf;
+    
+    // get status
+    status = *(uint32_t *) answer;
+    answer += sizeof(status);
+
+    // get fields_num
+    user_id = *(uint32_t *) answer;
+    answer += sizeof(user_id);
+
+    if (status > 0) {
+        switch (status) {
+            case CONTACT_OPER_ERROR:
+                buf = g_strdup_printf("User is not added: unknown error.");
+                break;
+            case CONTACT_OPER_INTERR:
+                buf = g_strdup_printf("User is not added: internal server error.");
+                break;
+            case CONTACT_OPER_NO_SUCH_USER:
+                buf = g_strdup_printf("User is not added: unknown user.");
+                break;
+            case CONTACT_OPER_INVALID_INFO:
+                buf = g_strdup_printf("User is not added: invalid data.");
+                break;
+            case CONTACT_OPER_USER_EXISTS:
+                buf = g_strdup_printf("User is not added: user is already exists.");
+                break;
+            case CONTACT_OPER_GROUP_LIMIT:
+                buf = g_strdup_printf("User is not added: group limit.");
+                break;
+            default:
+                buf = g_strdup_printf("Message is not delivered: unknown error.");
+        }
+        purple_notify_error(purple_account_get_connection(mmp->acct), NULL, _("Unable to add user"), buf);
+        g_free(buf);
+    }
+
     purple_debug_info("mra", "[%s] contact add ack received\n", __func__);              /* FIXME */
 }
             

@@ -195,6 +195,7 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
     mra_serv_conn *mmp = data;
     size_t i;
     char *group;
+    PurpleGroup *g = NULL;
     PurpleBuddy *buddy;
 
     // proceed all groups
@@ -202,7 +203,7 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
         purple_debug_info("mra", "[%s] group %s (%d)\n", 
                           __func__, groups[i].name, groups[i].id);                      /* FIXME */
         
-        if (groups[i].removed) {
+        if (groups[i].removed || groups[i].name == NULL || *groups[i].name == '\0') {
             continue;
         }
         
@@ -211,7 +212,7 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
         
         // add group into pidgin, if not exists
         if ((purple_find_group(groups[i].name)) == NULL) {
-            PurpleGroup *g = purple_group_new(groups[i].name);
+            g = purple_group_new(groups[i].name);
             purple_blist_add_group(g, NULL);
         }
     }
@@ -223,20 +224,19 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
         
         buddy = purple_find_buddy(mmp->acct, contacts[i].email);
        
-        if (contacts[i].intflags & CONTACT_INTFLAG_NOT_AUTHORIZED) {
-            g_hash_table_insert(mmp->users_not_authorized, contacts[i].email, "TRUE");
-        }
-
-        if (contacts[i].removed || contacts[i].skip_user) {
+        if (contacts[i].removed || contacts[i].skip_user || contacts[i].email == NULL || *contacts[i].email == '\0') {
             if (buddy != NULL) {
                 purple_blist_remove_buddy(buddy);
             }
             continue;
         }
         
+        if (!(contacts[i].intflags & CONTACT_INTFLAG_NOT_AUTHORIZED)) {
+            g_hash_table_insert(mmp->users_is_authorized, contacts[i].email, "TRUE");
+            purple_debug_info("mra", "[%s] users_is_authorized = %s\n", __func__, contacts[i].email);             /* FIXME */
+        }
+        
         g_hash_table_insert(mmp->users, contacts[i].email, g_strdup_printf("%d", contacts[i].id));
-
-        purple_debug_info("mra", "[%s] go\n", __func__);                                /* FIXME */
 
         // add user into pidgin, if user not found
         if (buddy == NULL) {
@@ -244,11 +244,15 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
             group = g_hash_table_lookup(mmp->groups, g_strdup_printf("%d", contacts[i].group_id));
 
             // get group by name
-            PurpleGroup *g = purple_find_group(group);
+            g = purple_find_group(group);
             // add group into pidgin, if not exists
             if (g == NULL) {
-                g = purple_group_new(groups[i].name);
-                purple_blist_add_group(g, NULL);
+                if (groups[contacts[i].group_id].name != NULL && *groups[contacts[i].group_id].name != '\0') {
+                    g = purple_group_new(groups[contacts[i].group_id].name);
+                    purple_blist_add_group(g, NULL);
+                } else {
+                    g = purple_group_new(_("Buddies"));
+                }
             }
 
             purple_debug_info("mra", "[%s] group %s\n", __func__, g->name);             /* FIXME */
@@ -593,6 +597,11 @@ void mra_add_buddy_ok_cb(mra_add_buddy_req *data, char *msg)
 
     email = strdup(purple_buddy_get_name(buddy));
     alias = strdup(purple_buddy_get_alias(buddy));
+    
+    if (g_hash_table_lookup(mmp->users_is_authorized, email) == NULL) {
+        g_hash_table_insert(mmp->users_is_authorized, email, "TRUE");
+        purple_debug_info("mra", "[%s] users_is_authorized = %s\n", __func__, email);             /* FIXME */
+    }
 
     mra_net_send_add_user(mmp, email, alias, 0, 0);
     mra_net_send_message(mmp, purple_buddy_get_name(buddy), msg, MESSAGE_FLAG_AUTHORIZE);
@@ -780,9 +789,9 @@ void mra_login(PurpleAccount *acct)
     mmp->connected = FALSE;
     mmp->authorized = FALSE;
     mmp->seq = 0;
-    mmp->users = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    mmp->users_not_authorized = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    mmp->groups = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    mmp->users = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
+    mmp->users_is_authorized = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
+    mmp->groups = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
     mmp->tx_buf = (char *) malloc(MRA_BUF_LEN + 1);
     mmp->tx_len = 0;
     mmp->tx_handler = 0;
@@ -833,9 +842,18 @@ void mra_close(PurpleConnection *gc)
         purple_input_remove(mmp->tx_handler);
     }
 
-    g_hash_table_destroy(mmp->users);
-    g_hash_table_destroy(mmp->groups);
-    g_free(mmp);
+    if (mmp->users) {
+        g_hash_table_destroy(mmp->users);
+    }
+    if (mmp->users_is_authorized) {
+        g_hash_table_destroy(mmp->users_is_authorized);
+    }
+    if (mmp->groups) {
+        g_hash_table_destroy(mmp->groups);
+    }
+    if (mmp) {
+        g_free(mmp);
+    }
 
     purple_connection_set_protocol_data(gc, NULL);
     purple_prefs_disconnect_by_handle(gc);
@@ -894,7 +912,7 @@ mra_buddy_menu(PurpleBuddy *buddy) {
     GList *menu;
     PurpleMenuAction *act;
     char *email;
-    char *not_authorized;
+    char *authorized;
     char *user_id;
 
     gc = purple_account_get_connection(purple_buddy_get_account(buddy));
@@ -906,10 +924,10 @@ mra_buddy_menu(PurpleBuddy *buddy) {
 
     mmp = gc->proto_data;
     email = (char *) purple_buddy_get_name(buddy);
-    not_authorized = g_hash_table_lookup(mmp->users_not_authorized, email);
+    authorized = g_hash_table_lookup(mmp->users_is_authorized, email);
     user_id = g_hash_table_lookup(mmp->users, email);
     
-    if (user_id == NULL || not_authorized != NULL) {
+    if (authorized == NULL && user_id == NULL) {
         purple_debug_info("mra", "[%s] user %s is not authorized\n", __func__, email);  /* FIXME */
         
         act = purple_menu_action_new(_("Re-request Authorization"), PURPLE_CALLBACK(mra_rerequest_auth), NULL, NULL);
@@ -1043,7 +1061,7 @@ const char *mra_list_emblem(PurpleBuddy *buddy)
     PurpleConnection *gc;
     mra_serv_conn *mmp;
     char *email;
-    char *not_authorized;
+    char *authorized;
     char *user_id;
 
     gc = purple_account_get_connection(purple_buddy_get_account(buddy));
@@ -1053,13 +1071,13 @@ const char *mra_list_emblem(PurpleBuddy *buddy)
 
     mmp = gc->proto_data;
     email = (char *) purple_buddy_get_name(buddy);
-    not_authorized = g_hash_table_lookup(mmp->users_not_authorized, email);
+    authorized = g_hash_table_lookup(mmp->users_is_authorized, email);
     user_id = g_hash_table_lookup(mmp->users, email);
     
-    purple_debug_info("mra", "[%s] get %s emblem: %s, id: %s\n", __func__, email, not_authorized, user_id);                 
+    purple_debug_info("mra", "[%s] get %s emblem: %s, id: %s\n", __func__, email, authorized, user_id);                 
                                                                                         /* FIXME */
 
-    if (user_id == NULL || not_authorized != NULL) {
+    if (authorized == NULL && user_id == NULL) {
         purple_debug_info("mra", "[%s] user %s is not authorized\n", __func__, email);  /* FIXME */
         return "not-authorized";
     }

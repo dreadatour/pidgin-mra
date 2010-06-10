@@ -40,7 +40,7 @@ typedef struct _mra_serv_conn {
     gint fd;
     gchar *name;
     GHashTable *users;
-    GHashTable *users_not_authorized;
+    GHashTable *users_is_authorized;
     GHashTable *groups;
     gboolean connected;
     gboolean authorized;
