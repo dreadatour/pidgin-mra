@@ -1065,11 +1065,19 @@ const char *mra_list_emblem(PurpleBuddy *buddy)
     char *user_id;
 
     gc = purple_account_get_connection(purple_buddy_get_account(buddy));
-    if (!gc) {
+    if (gc == NULL) {
+        return NULL;
+    }
+
+    if (gc->state != PURPLE_CONNECTED) {
         return NULL;
     }
 
     mmp = gc->proto_data;
+    if (mmp == NULL || mmp->users == NULL || mmp->users_is_authorized == NULL) {
+        return NULL;
+    }
+
     email = (char *) purple_buddy_get_name(buddy);
     authorized = g_hash_table_lookup(mmp->users_is_authorized, email);
     user_id = g_hash_table_lookup(mmp->users, email);
