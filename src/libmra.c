@@ -1314,7 +1314,14 @@ static PurplePluginProtocolInfo prpl_info = {
 	sizeof(PurplePluginProtocolInfo),               // struct_size
     mra_get_account_text_table,                     // get_account_text_table
     NULL,                                           // initiate_media
+#if PURPLE_MAJOR_VERSION >= 2 && PURPLE_MINOR_VERSION >= 7
+    NULL,                                           // can_do_media
+    NULL,						                    // get_moods
+    NULL,						                    // set_public_alias
+    NULL						                    // get_public_alias
+#else
     NULL                                            // can_do_media
+#endif
 };
 
 /**************************************************************************************************

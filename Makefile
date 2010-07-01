@@ -48,7 +48,7 @@ clean:
 	rm -f libmra.so
 
 libmra.so:	${MRA_SOURCES}
-	${LINUX32_COMPILER} ${LIBPURPLE_CFLAGS} -Wall -Wextra -pthread ${GLIB_CFLAGS} -I. -g -O2 -pipe ${MRA_SOURCES} -o libmra.so -shared -fPIC -DPIC
+	${LINUX32_COMPILER} ${LIBPURPLE_CFLAGS} -Wall -Wextra -pthread ${GLIB_CFLAGS} -I. -g3 -O2 -pipe ${MRA_SOURCES} -o libmra.so -shared -fPIC -DPIC
 
 release:	libmra.so
 

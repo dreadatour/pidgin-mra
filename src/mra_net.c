@@ -25,10 +25,23 @@
 #define LPS_DEBUG(c, s) (unsigned char) c[s+3], (unsigned char) c[s+2], (unsigned char) c[s+1], (unsigned char) c[s]
 char *debug_data(char *data, size_t len) {
     size_t i;
-    char *buffer;
-    
-    if (!data || len == 0) 
-        return "error";
+    char *buffer = NULL;
+
+    if (!data) {
+        buffer = strdup("error: data pointer is NULL");
+    }
+
+    if (!len) {
+        buffer = strdup("error: zero length");
+    }
+
+    if (len > 1048576) {
+        buffer = strdup("error: length exceeds 1M");
+    }
+
+    if (buffer) {
+        return buffer;
+    }
 
     if (len < 44) {
         buffer = (char * ) malloc(2 * len + 1);
@@ -36,6 +49,8 @@ char *debug_data(char *data, size_t len) {
             sprintf(buffer + 2 * i + 8, "%02x", (unsigned char) data[i]);
         }
     } else {
+        size_t edge = len - 44;
+
         buffer = (char * ) malloc(2 * len + 9);
         sprintf(buffer,      "%02x%02x%02x%02x-", LPS_DEBUG(data, 0));  // magic
         sprintf(buffer + 9,  "%02x%02x%02x%02x-", LPS_DEBUG(data, 4));  // proto
@@ -44,7 +59,7 @@ char *debug_data(char *data, size_t len) {
         sprintf(buffer + 36, "%02x%02x%02x%02x-", LPS_DEBUG(data, 16)); // dlen
         sprintf(buffer + 45, "%02x%02x%02x%02x-", LPS_DEBUG(data, 20)); // from
         sprintf(buffer + 54, "%02x%02x%02x%02x ", LPS_DEBUG(data, 24)); // fromport
-        for (i = 0; i < len - 44; i++)
+        for (i = 0; i < edge; i++)
             sprintf(buffer + 2 * i + 63, "%02x", (unsigned char) data[44 + i]);
     }
     return buffer;
@@ -226,10 +241,13 @@ gboolean mra_net_send_flush(gpointer conn)
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
     
     int ret = 0;
+    char *ddata;
     mra_serv_conn *mmp = conn;
     ret = write(mmp->fd, mmp->tx_buf, mmp->tx_len);
+    ddata = debug_data(mmp->tx_buf, mmp->tx_len);
     purple_debug_info("mra", "[%s] bytes sent: %d\n", __func__, ret);                   /* FIXME */
-    purple_debug_info("mra", "send: %s\n", debug_data(mmp->tx_buf, mmp->tx_len));       /* FIXME */
+    purple_debug_info("mra", "send: %s\n", ddata);                                      /* FIXME */
+    free(ddata);
     if (ret < 0) {
         return FALSE;
     } else {
@@ -600,6 +618,7 @@ void mra_net_read_cb(gpointer data, gint source, PurpleInputCondition cond)
     mra_serv_conn *mmp = data;
     int len;
     char *buf;
+    char *ddata;
 
     // increase buffer size
     mmp->rx_buf = g_realloc(mmp->rx_buf, mmp->rx_len + MRA_BUF_LEN + 1);
@@ -609,8 +628,10 @@ void mra_net_read_cb(gpointer data, gint source, PurpleInputCondition cond)
     len = read(mmp->fd, buf, MRA_BUF_LEN);
     mmp->rx_len = mmp->rx_len + len;
     
+    ddata = debug_data(mmp->rx_buf, len);
     purple_debug_info("mra", "[%s] bytes readed: %d\n", __func__, len);                 /* FIXME */
-    purple_debug_info("mra", "read: %s\n", debug_data(mmp->rx_buf, len));               /* FIXME */
+    purple_debug_info("mra", "read: %s\n", ddata);                                      /* FIXME */
+    free(ddata);
 
     if (len < 0 && errno == EAGAIN) {
         // read more
@@ -643,6 +664,7 @@ gboolean mra_net_read_proceed(gpointer data)
     size_t packet_len = 0;
     char *answer;
     char *next_packet;
+    char *ddata;
 
     // return if no data
     if (mmp->rx_len == 0) {
@@ -673,7 +695,9 @@ gboolean mra_net_read_proceed(gpointer data)
     purple_debug_info("mra", "[%s] received packet is 0x%08x (length: %d, buf len: %d)\n", 
                   __func__, (uint32_t) head->msg, packet_len, mmp->rx_len);             /* FIXME */
     
-    purple_debug_info("mra", "read: %s\n", debug_data(mmp->rx_buf, packet_len));        /* FIXME */
+    ddata = debug_data(mmp->rx_buf, packet_len);
+    purple_debug_info("mra", "read: %s\n", ddata);                                      /* FIXME */
+    free(ddata);
 
     // check if we received full packet
     if (mmp->rx_len < packet_len) {
