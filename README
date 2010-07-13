@@ -1,1 +1,9 @@
 This is Mail.ru Agent protocol plugin for Pidgin IM
+
+Changes
+~~~~~~~
+
+0.1.4
+- User avatars added
+- Mrim server request added 
+
