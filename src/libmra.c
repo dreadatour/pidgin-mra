@@ -74,13 +74,74 @@ gboolean mra_email_is_valid(const char *email)
 }
 
 /**************************************************************************************************
+    Load server to connect to callback
+**************************************************************************************************/
+void mra_get_connection_server_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const gchar *url_text, gsize len, const gchar *error_message) {
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+    UNUSED(url_data);
+    UNUSED(len);
+    UNUSED(error_message);
+    
+    gchar **srv = NULL;
+    gchar *server = NULL;
+    int port = 0;
+    
+    mra_serv_conn *mmp = data;
+    g_return_if_fail(mmp != NULL);
+
+    PurpleAccount *acct = mmp->acct;
+    g_return_if_fail(acct != NULL);
+        
+    PurpleConnection *gc = mmp->gc;
+    g_return_if_fail(gc != NULL);
+        
+    if (!url_text) {
+        purple_debug_info("mra", "[%s] failed to get server to connect to\n", __func__);
+                                                                                        /* FIXME */
+        purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Connection problem"));
+        return;
+    }
+        
+    purple_debug_info("mra", "[%s] server to connect to: '%s'\n", __func__, url_text);  /* FIXME */
+
+    srv = g_strsplit(url_text, ":", 2);
+    server = g_strdup(srv[0]);
+    port = atoi(srv[1]);
+
+    mmp->connect_data = purple_proxy_connect(gc, acct, server, port, mra_connect_cb, gc);
+    if (mmp->connect_data == NULL) {   
+        purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Connection problem"));
+    }                                                                                                                                                                                                                                                                                                               
+
+    g_strfreev(srv);
+    g_free(server);
+}
+
+/**************************************************************************************************
+    Get server to connect to
+**************************************************************************************************/
+void mra_get_connection_server(gpointer data, const char *server, int port) {
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+    gchar *url = NULL;
+
+    url = g_strdup_printf("http://%s:%u/", server, port);
+
+    purple_debug_info("mra", "[%s] connection server url: %s\n", __func__, url);                   /* FIXME */
+
+    purple_util_fetch_url(url, TRUE, NULL, TRUE, mra_get_connection_server_cb, data);
+
+    g_free(url);
+}
+
+/**************************************************************************************************
     Load user avatar callback
 **************************************************************************************************/
 void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const gchar *url_text, gsize len, const gchar *error_message) {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
     UNUSED(url_data);
-    UNUSED(url_text);
     UNUSED(error_message);
 
     PurpleAccount *account;
@@ -937,6 +998,9 @@ void mra_login(PurpleAccount *acct)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
+    gchar *server = NULL;
+    int port = 0;
+
     g_return_if_fail(acct != NULL);
     
     PurpleConnection *gc = purple_account_get_connection(acct);
@@ -963,18 +1027,23 @@ void mra_login(PurpleAccount *acct)
     mmp->rx_len = 0;
 	
     purple_connection_update_progress(gc, _("Connecting"), 1, 3); 
-    
-    mmp->connect_data = purple_proxy_connect(gc, 
-                                             acct,
-                                             purple_account_get_string(acct, "host", MRA_HOST),
-                                             purple_account_get_int(acct,    "port", MRA_PORT),
-                                             mra_connect_cb, 
-                                             gc);
 
-    if (mmp->connect_data == NULL) {   
-        purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Connection problem"));
-        return;
-    }                                                                                                                                                                                                                                                                                                               
+    server = g_strdup(purple_account_get_string(acct, "host", MRA_HOST));
+    port   = purple_account_get_int(acct,    "port", MRA_PORT);
+
+    if (strcmp(server, "mrim.mail.ru") == 0) {
+        purple_debug_info("mra", "[%s] Get server to connect to: %s:%u\n", __func__, server, port);              
+                                                                                        /* FIXME */
+        mra_get_connection_server(mmp, server, port);
+    } else {
+        purple_debug_info("mra", "[%s] Connect directly to server %s:%u\n", __func__, server, port);
+                                                                                        /* FIXME */
+        mmp->connect_data = purple_proxy_connect(gc, acct, server, port, mra_connect_cb, gc);
+        if (mmp->connect_data == NULL) {   
+            purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Connection problem"));
+        }                                                                                                                                                                                                                                                                                                               
+    }
+    g_free(server);
 }
 
 /**************************************************************************************************

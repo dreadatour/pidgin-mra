@@ -22,10 +22,10 @@
 #ifndef _MRA_H_
 #define _MRA_H_
 
-#define VERSION_TXT "pidgin-mra 0.1"
+#define VERSION_TXT "pidgin-mra 0.1.4"
 
-#define MRA_HOST "mrim20.mail.ru"
-#define MRA_PORT 2041
+#define MRA_HOST "mrim.mail.ru"
+#define MRA_PORT 2042
 #define MRA_BUF_LEN 65536
 #define MAX_GROUP   20
 #define TYPING_TIMEOUT 10
@@ -123,6 +123,11 @@ typedef struct _mra_add_buddy_req
 #define MRA_STATUS_ID_INVISIBLE	        "UNVISIBLE"
 
 gboolean mra_email_is_valid(const char *);
+
+void mra_get_connection_server_cb(PurpleUtilFetchUrlData *, gpointer, const gchar *, gsize, const gchar *);
+void mra_get_connection_server(gpointer, const char *, int);
+void mra_load_avatar_cb(PurpleUtilFetchUrlData *, gpointer, const gchar *, gsize, const gchar *);
+void mra_load_avatar(gpointer, const char *);
 
 void mra_contact_set_status(gpointer, char *, uint32_t);
 
