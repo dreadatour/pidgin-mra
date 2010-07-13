@@ -37,3 +37,9 @@
 
     * Fix variables types -> hope, it will work in 64-bit base systems
 
+2010-07-14  Vladimir Rudnyh  <mail@dreadatour.ru>
+
+    * Add user avatars
+
+    * Add connection server request
+

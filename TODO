@@ -7,7 +7,7 @@ TODO
 
 2. Features
 - add localization
-- add avatars into contact list
++ add avatars into contact list (done)
 + add user info window (done)
 + add 'new emails' feature (done)
 - change proto.h version to 1.22 (more functions)
