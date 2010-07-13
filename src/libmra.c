@@ -74,6 +74,87 @@ gboolean mra_email_is_valid(const char *email)
 }
 
 /**************************************************************************************************
+    Load user avatar callback
+**************************************************************************************************/
+void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const gchar *url_text, gsize len, const gchar *error_message) {
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+
+    UNUSED(url_data);
+    UNUSED(url_text);
+    UNUSED(error_message);
+
+    PurpleAccount *account;
+    const char *name;
+
+    PurpleBuddy *buddy = data;
+    g_return_if_fail(buddy != NULL);
+    
+    name = purple_buddy_get_name(buddy);
+    
+    purple_debug_info("mra", "[%s] downloaded: %" G_GSIZE_FORMAT " bytes\n", __func__, len);
+                                                                                        /* FIXME */
+
+    if (!url_text) {
+        purple_debug_info("mra", "[%s] failed to download avatar for %s\n", __func__, name);
+                                                                                        /* FIXME */
+        return;
+    }   
+
+    account = purple_buddy_get_account(buddy);
+    g_return_if_fail(account != NULL);
+
+    purple_buddy_icons_set_for_user(account, name, g_memdup((gchar *)url_text, len), len, NULL);
+}
+
+/**************************************************************************************************
+    Load user avatar
+**************************************************************************************************/
+void mra_load_avatar(gpointer data, const char *email) {
+    purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
+    
+    PurpleBuddy *buddy;
+    mra_serv_conn *mmp;
+    gchar **eml = NULL;
+    gchar *domain = NULL;
+    gchar *url = NULL;
+
+    mmp = data;
+    g_return_if_fail(mmp != NULL);
+    
+    buddy = purple_find_buddy(mmp->acct, email);
+    g_return_if_fail(buddy != NULL);
+
+    purple_debug_info("mra", "[%s] find avatar for email: %s\n", __func__, email);      /* FIXME */
+    
+    eml = g_strsplit(email, "@", 2);
+    if (strcmp(eml[1], "corp.mail.ru") == 0) {
+        domain = g_strdup("corp");
+    } else if (strcmp(eml[1], "mail.ru") == 0) {
+        domain = g_strdup("mail");
+    } else if (strcmp(eml[1], "list.ru") == 0) {
+        domain = g_strdup("list");
+    } else if (strcmp(eml[1], "inbox.ru") == 0) {
+        domain = g_strdup("inbox");
+    } else if (strcmp(eml[1], "bk.ru") == 0) {
+        domain = g_strdup("bk");
+    } else {
+        purple_debug_info("mra", "[%s] unknown email domain: %s\n", __func__, eml[1]);  /* FIXME */
+        g_strfreev(eml);
+        return;
+    }
+
+    url = g_strdup_printf("http://obraz.foto.mail.ru/%s/%s/_mrimavatar", domain, eml[0]);
+
+    purple_debug_info("mra", "[%s] avatar url: %s\n", __func__, url);                   /* FIXME */
+
+    purple_util_fetch_url(url, TRUE, NULL, TRUE, mra_load_avatar_cb, buddy);
+
+    g_strfreev(eml);
+    g_free(domain);
+    g_free(url);
+}
+
+/**************************************************************************************************
     Set contact status
 **************************************************************************************************/
 void mra_contact_set_status(gpointer data, char *email, uint32_t status) 
@@ -110,6 +191,9 @@ void mra_contact_set_status(gpointer data, char *email, uint32_t status)
             purple_debug_info("mra", "[%s] %s status is unknown\n", __func__, email);   /* FIXME */
             purple_prpl_got_user_status(mmp->acct, email, MRA_STATUS_ID_UNDETERMINATED, NULL);
     }
+
+    // load avatar
+    mra_load_avatar(data, email);
 }
 
 /**************************************************************************************************
