@@ -153,6 +153,13 @@ void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const g
     name = purple_buddy_get_name(buddy);
     g_return_if_fail(name != NULL);
     
+    // check email by purple
+    if (!purple_email_is_valid(name)) {
+        purple_debug_info("mra", "[%s] user is invalid: %s (%s)\n", __func__, name, buddy->alias);  
+                                                                                        /* FIXME */
+        return;
+    }
+    
     purple_debug_info("mra", "[%s] downloaded avatar for user %s\n", __func__, name);   /* FIXME */
     
     if (error_message) {
