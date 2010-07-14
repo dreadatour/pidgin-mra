@@ -241,13 +241,18 @@ gboolean mra_net_send_flush(gpointer conn)
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
     
     int ret = 0;
-    char *ddata;
+    char *ddata = NULL;
+    
     mra_serv_conn *mmp = conn;
     ret = write(mmp->fd, mmp->tx_buf, mmp->tx_len);
+    
     ddata = debug_data(mmp->tx_buf, mmp->tx_len);
     purple_debug_info("mra", "[%s] bytes sent: %d\n", __func__, ret);                   /* FIXME */
     purple_debug_info("mra", "send: %s\n", ddata);                                      /* FIXME */
-    free(ddata);
+    if (ddata) {
+        g_free(ddata);
+    }
+
     if (ret < 0) {
         return FALSE;
     } else {
@@ -556,8 +561,8 @@ gboolean mra_net_send_anketa_info(mra_serv_conn *mmp, const char *who)
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
 	char *c;
-	char *user;
-	char *domain;
+	char *user   = NULL;
+	char *domain = NULL;
 	char *user_lps;
 	char *domain_lps;
 
@@ -574,7 +579,7 @@ gboolean mra_net_send_anketa_info(mra_serv_conn *mmp, const char *who)
 	user_len = c - who;
 	domain_len = strlen(who) - user_len - 1;
 
-	user = (char *) malloc(user_len + 1);
+	user   = (char *) malloc(user_len + 1);
 	domain = (char *) malloc(domain_len + 1);
 
 	strncpy(user, who, user_len);
@@ -586,8 +591,12 @@ gboolean mra_net_send_anketa_info(mra_serv_conn *mmp, const char *who)
     user_lps = mra_net_mklps(user);
     domain_lps = mra_net_mklps(domain);
 	
-	free(domain);
-	free(user);
+    if (domain) {
+    	g_free(domain);
+    }
+    if (user) {
+    	g_free(user);
+    }
 
     mra_net_fill_cs_header(&head, mmp->seq++, MRIM_CS_WP_REQUEST, LPSSIZE(user_lps) + LPSSIZE(domain_lps) + 2 * sizeof(param));
     mra_net_send(mmp, &head,  sizeof(head));
@@ -618,7 +627,7 @@ void mra_net_read_cb(gpointer data, gint source, PurpleInputCondition cond)
     mra_serv_conn *mmp = data;
     int len;
     char *buf;
-    char *ddata;
+    char *ddata = NULL;
 
     // increase buffer size
     mmp->rx_buf = g_realloc(mmp->rx_buf, mmp->rx_len + MRA_BUF_LEN + 1);
@@ -631,7 +640,9 @@ void mra_net_read_cb(gpointer data, gint source, PurpleInputCondition cond)
     ddata = debug_data(mmp->rx_buf, len);
     purple_debug_info("mra", "[%s] bytes readed: %d\n", __func__, len);                 /* FIXME */
     purple_debug_info("mra", "read: %s\n", ddata);                                      /* FIXME */
-    free(ddata);
+    if (ddata) {
+        g_free(ddata);
+    }
 
     if (len < 0 && errno == EAGAIN) {
         // read more
@@ -664,7 +675,7 @@ gboolean mra_net_read_proceed(gpointer data)
     size_t packet_len = 0;
     char *answer;
     char *next_packet;
-    char *ddata;
+    char *ddata = NULL;
 
     // return if no data
     if (mmp->rx_len == 0) {
@@ -697,7 +708,9 @@ gboolean mra_net_read_proceed(gpointer data)
     
     ddata = debug_data(mmp->rx_buf, packet_len);
     purple_debug_info("mra", "read: %s\n", ddata);                                      /* FIXME */
-    free(ddata);
+    if (ddata) {
+        g_free(ddata);
+    }
 
     // check if we received full packet
     if (mmp->rx_len < packet_len) {
@@ -1489,8 +1502,8 @@ void mra_net_read_anketa_info(gpointer data, char *answer, uint32_t len)
 
 	for (i = 0; i < fields_num; i++) {
 		uint32_t j;
-		char *key;
-		char *val;
+		char *key = NULL;
+        char *val = NULL;
 		char *answer_temp;
 
 		for (j = 0, answer_temp = answer; j < fields_num; j++)
@@ -1547,8 +1560,12 @@ void mra_net_read_anketa_info(gpointer data, char *answer, uint32_t len)
 
 		} 
 
-		free(key);
-		free(val);
+        if (key) {
+    		g_free(key);
+        }
+        if (val) {
+    		g_free(val);
+        }
 	}
 
 	char *who = (char *) malloc(strlen(mai.username) + strlen(mai.domain) + 2);
@@ -1556,7 +1573,9 @@ void mra_net_read_anketa_info(gpointer data, char *answer, uint32_t len)
 
 	mmp->callback_anketa_info(mmp, who, &mai);
 
-	free(who);
+	if (who) {
+        g_free(who);
+    }
 	g_free(mai.phone);
 	g_free(mai.location);
 	g_free(mai.birthday);
