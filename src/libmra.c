@@ -144,23 +144,22 @@ void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const g
     UNUSED(url_data);
     UNUSED(error_message);
 
-    PurpleAccount *account;
-    const char *name;
+    PurpleAccount *account = NULL;
+    PurpleBuddy *buddy = NULL;
 
-    PurpleBuddy *buddy = data;
+    buddy = data;
     g_return_if_fail(buddy != NULL);
-    
-    name = purple_buddy_get_name(buddy);
-    g_return_if_fail(name != NULL);
+    g_return_if_fail(buddy->name != NULL);
     
     // check email by purple
-    if (!purple_email_is_valid(name)) {
-        purple_debug_info("mra", "[%s] user is invalid: %s (%s)\n", __func__, name, buddy->alias);  
+    if (!purple_email_is_valid(buddy->name)) {
+        purple_debug_info("mra", "[%s] user is invalid: %s (%s)\n", __func__, buddy->name, buddy->alias);  
                                                                                         /* FIXME */
         return;
     }
     
-    purple_debug_info("mra", "[%s] downloaded avatar for user %s\n", __func__, name);   /* FIXME */
+    purple_debug_info("mra", "[%s] downloaded avatar for user %s\n", __func__, buddy->name);   
+                                                                                        /* FIXME */
     
     if (error_message) {
         purple_debug_info("mra", "[%s] error: %s\n", __func__, error_message);          /* FIXME */
@@ -170,7 +169,7 @@ void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const g
                                                                                         /* FIXME */
 
     if (!url_text) {
-        purple_debug_info("mra", "[%s] failed to download avatar for %s\n", __func__, name);
+        purple_debug_info("mra", "[%s] failed to download avatar for %s\n", __func__, buddy->name);
                                                                                         /* FIXME */
         return;
     }   
@@ -178,7 +177,7 @@ void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const g
     account = purple_buddy_get_account(buddy);
     g_return_if_fail(account != NULL);
 
-    purple_buddy_icons_set_for_user(account, name, g_memdup((gchar *)url_text, len), len, NULL);
+    purple_buddy_icons_set_for_user(account, buddy->name, g_memdup((gchar *)url_text, len), len, NULL);
 }
 
 /**************************************************************************************************
