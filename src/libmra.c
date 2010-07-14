@@ -154,7 +154,7 @@ void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const g
     g_return_if_fail(name != NULL);
     
     if (error_message) {
-        purple_debug_info("mra", "[%s] error: %s\n", __func__, len, error_message);     /* FIXME */
+        purple_debug_info("mra", "[%s] error: %s\n", __func__, error_message);          /* FIXME */
     }
     
     purple_debug_info("mra", "[%s] downloaded: %" G_GSIZE_FORMAT " bytes for user %s\n", __func__, len, name);
