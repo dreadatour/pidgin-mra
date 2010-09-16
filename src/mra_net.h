@@ -53,6 +53,8 @@ typedef struct _mra_serv_conn {
     guint tx_handler;
     char *rx_buf;
     unsigned int rx_len;
+    mra_group *groups_list;
+    mra_contact *contacts_list;
 
     // handlers
     guint ping_timer;

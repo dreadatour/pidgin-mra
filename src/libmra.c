@@ -253,12 +253,10 @@ void mra_contact_set_status(gpointer data, char *email, uint32_t status)
         case STATUS_ONLINE:
             purple_debug_info("mra", "[%s] %s status is online\n", __func__, email);    /* FIXME */
             purple_prpl_got_user_status(mmp->acct, email, MRA_STATUS_ID_ONLINE, NULL);
-
             break;
         case STATUS_AWAY:
             purple_debug_info("mra", "[%s] %s status is away\n", __func__, email);      /* FIXME */
             purple_prpl_got_user_status(mmp->acct, email, MRA_STATUS_ID_AWAY, NULL);
-
             break;
         case STATUS_UNDETERMINATED:
         default:
@@ -372,6 +370,9 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
     g_return_if_fail(mmp->groups              != NULL);
     g_return_if_fail(mmp->users               != NULL);
     g_return_if_fail(mmp->users_is_authorized != NULL);
+    
+    mmp->groups_list   = groups;
+    mmp->contacts_list = contacts;
 
     // proceed all groups
     for (i = 0; i < group_cnt; i++) {
@@ -1038,6 +1039,9 @@ void mra_login(PurpleAccount *acct)
     mmp->tx_handler = 0;
     mmp->rx_buf = (char *) malloc(MRA_BUF_LEN + 1);
     mmp->rx_len = 0;
+    
+    mmp->groups_list   = NULL;
+    mmp->contacts_list = NULL;
 	
     purple_connection_update_progress(gc, _("Connecting"), 1, 3); 
 
@@ -1095,9 +1099,16 @@ void mra_close(PurpleConnection *gc)
     if (mmp->groups) {
         g_hash_table_destroy(mmp->groups);
     }
+    if (mmp->groups_list) {
+        g_free(mmp->groups_list);
+    }
+    if (mmp->contacts_list) {
+        g_free(mmp->contacts_list);
+    }
     if (mmp) {
         g_free(mmp);
     }
+    gc->proto_data = NULL;
 
     purple_connection_set_protocol_data(gc, NULL);
     purple_prefs_disconnect_by_handle(gc);
@@ -1320,7 +1331,7 @@ const char *mra_list_emblem(PurpleBuddy *buddy)
 
     gc = purple_account_get_connection(purple_buddy_get_account(buddy));
     g_return_val_if_fail(gc        != NULL,             NULL);
-    g_return_val_if_fail(gc->state != PURPLE_CONNECTED, NULL);
+    g_return_val_if_fail(gc->state == PURPLE_CONNECTED, NULL);
 
     mmp = gc->proto_data;
     g_return_val_if_fail(mmp                      != NULL, NULL);
