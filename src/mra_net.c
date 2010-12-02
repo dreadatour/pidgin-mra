@@ -20,6 +20,7 @@
  */
 
 #include "libmra.h"
+#include <locale.h>
 
 /////////////////////////////////////XXX///////////////////////////////////////////////////////////
 #define LPS_DEBUG(c, s) (unsigned char) c[s+3], (unsigned char) c[s+2], (unsigned char) c[s+1], (unsigned char) c[s]
