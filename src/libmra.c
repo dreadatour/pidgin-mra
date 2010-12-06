@@ -623,6 +623,9 @@ void mra_connect_cb(gpointer data, gint source, const gchar *error_message)
 
     const char *username = purple_account_get_username(mmp->acct);
 
+    // Don't need to cancel connection any more since it is established.
+    mmp->connect_data = NULL;
+        
     // return error if connection is invalid
     if (!PURPLE_CONNECTION_IS_VALID(gc)) {
         purple_debug_error("mra", "purple connection is invalid\n");                    /* FIXME */
@@ -641,15 +644,7 @@ void mra_connect_cb(gpointer data, gint source, const gchar *error_message)
         return;
     }
 
-    // return error if username is invalid
-    if (!mra_email_is_valid(username)) {
-        purple_debug_error("mra", "[%s] email '%s' is invalid\n", __func__, username);  /* FIXME */
-        purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_INVALID_SETTINGS, _("Username is invalid"));
-        return;
-    }
-
     // fill proto data
-    mmp->connect_data = NULL;
     mmp->fd = source;
     mmp->connected = TRUE;
     mmp->name = g_strdup_printf("%s:%d", 
@@ -1014,11 +1009,14 @@ void mra_login(PurpleAccount *acct)
 
     gchar *server = NULL;
     int port = 0;
+    const char *username = NULL;
 
     g_return_if_fail(acct != NULL);
     
     PurpleConnection *gc = purple_account_get_connection(acct);
     g_return_if_fail(gc != NULL);
+    
+    username = purple_account_get_username(acct);
 
     mra_serv_conn *mmp;
 
@@ -1048,7 +1046,11 @@ void mra_login(PurpleAccount *acct)
     server = g_strdup(purple_account_get_string(acct, "host", MRA_HOST));
     port   = purple_account_get_int(acct,    "port", MRA_PORT);
 
-    if (strcmp(server, "mrim.mail.ru") == 0) {
+    // return error if username is invalid
+    if (!mra_email_is_valid(username)) {
+        purple_debug_error("mra", "[%s] email '%s' is invalid\n", __func__, username);  /* FIXME */
+        purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_INVALID_SETTINGS, _("Username is invalid"));
+    } else if (strcmp(server, "mrim.mail.ru") == 0) {
         purple_debug_info("mra", "[%s] Get server to connect to: %s:%u\n", __func__, server, port);              
                                                                                         /* FIXME */
         mra_get_connection_server(mmp, server, port);
