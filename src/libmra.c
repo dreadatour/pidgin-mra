@@ -1227,19 +1227,19 @@ GList *mra_statuses(PurpleAccount *acct)
 	PurpleStatusType *status;
 	
 	//Online people have a status message and also a date when it was set	
-	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE, "ONLINE", _("Online"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
+	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE, "available", _("Online"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
 	types  = g_list_append(types, status);
 	
 	//Away people have a status message and also a date when it was set	
-	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AWAY, "AWAY", _("Away"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
+	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AWAY, "away", _("Away"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
 	types  = g_list_append(types, status);
 	
 	//Unavailable people have a status message and also a date when it was set	
-	status = purple_status_type_new_with_attrs(PURPLE_STATUS_UNAVAILABLE, "UNAVIALABLE", _("Unavailable"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
+	status = purple_status_type_new_with_attrs(PURPLE_STATUS_UNAVAILABLE, "unavailable", _("Unavailable"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
 	types  = g_list_append(types, status);
 	
 	//Offline people dont have messages
-	status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, "OFFLINE", _("Offline"), FALSE, TRUE, FALSE);
+	status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, "offline", _("Offline"), FALSE, TRUE, FALSE);
 	types  = g_list_append(types, status);
 	
 	return types;
