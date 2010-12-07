@@ -1,7 +1,6 @@
 LINUX32_COMPILER = gcc
 
-LIBPURPLE_CFLAGS = -I/usr/include/libpurple -DPURPLE_PLUGINS -DENABLE_NLS
-GLIB_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/include
+LIBPURPLE_CFLAGS = $(shell pkg-config --cflags --libs purple) -DPURPLE_PLUGINS -DENABLE_NLS
 
 #Standard stuff here
 MRA_SOURCES =     \
@@ -48,7 +47,7 @@ clean:
 	rm -f libmra.so
 
 libmra.so:	${MRA_SOURCES}
-	${LINUX32_COMPILER} ${LIBPURPLE_CFLAGS} -Wall -Wextra -pthread ${GLIB_CFLAGS} -I. -g3 -O2 -pipe ${MRA_SOURCES} -o libmra.so -shared -fPIC -DPIC
+	${LINUX32_COMPILER} ${LIBPURPLE_CFLAGS} -Wall -Wextra -pthread -I. -g3 -O2 -pipe ${MRA_SOURCES} -o libmra.so -shared -fPIC -DPIC
 
 release:	libmra.so
 
