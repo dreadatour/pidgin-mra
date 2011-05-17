@@ -960,7 +960,6 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
     uint32_t contact_group_id;
     size_t group_cnt = 0;
     size_t contact_cnt = 0;
-    gboolean skip_user;
 
     p = answer;
 
@@ -1082,11 +1081,10 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
         }
         
         // TODO: skip contact if it is duplicate
-        skip_user = FALSE;
         for (i = 0; i < contact_cnt; i++) {
             if (strcmp(email, contacts[i].email) == 0) {
                 purple_debug_info("mra", "[%s] skip user %s\n", __func__, email);       /* FIXME */
-                skip_user = TRUE;
+				contacts[i].skip_user = TRUE;
                 break;
             }
         }
@@ -1110,7 +1108,7 @@ void mra_net_read_contact_list(gpointer data, char *answer, size_t len)
         contacts[contact_cnt].group_id = contact_group_id;
         contacts[contact_cnt].intflags = intflags;
         contacts[contact_cnt].status = user_status;
-        contacts[contact_cnt].skip_user = skip_user;
+        contacts[contact_cnt].skip_user = FALSE;
         contacts[contact_cnt].removed = FALSE;
         // push contact into contact array if contact is active
         if (flags & CONTACT_FLAG_REMOVED || flags & CONTACT_FLAG_SHADOW) {
