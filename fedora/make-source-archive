@@ -1,0 +1,10 @@
+#!/bin/bash
+
+APP_NAME=pidgin-mra
+APP_VERSION=git`date +%Y%m%d`
+
+cd ../..
+cp -f -r ./$APP_NAME ./$APP_NAME-$APP_VERSION
+rm -rf ./$APP_NAME-$APP_VERSION/.git
+tar cfj $APP_NAME-$APP_VERSION.tar.bz2 ./$APP_NAME-$APP_VERSION
+rm -rf ./$APP_NAME-$APP_VERSION
