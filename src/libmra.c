@@ -31,7 +31,7 @@ static PurplePlugin *this_plugin;
 gboolean mra_email_is_valid(const char *email)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-        
+
     purple_debug_info("mra", "[%s] check email '%s'\n", __func__, email);               /* FIXME */
 
     // check email by purple
@@ -39,7 +39,7 @@ gboolean mra_email_is_valid(const char *email)
         purple_debug_info("mra", "[%s] failed check 'purple_email_is_valid'\n", __func__);  /* FIXME */
         return FALSE;
     }
-    
+
     char **eml = g_strsplit(email, "@", 2);
     gboolean ret = TRUE;
 
@@ -82,27 +82,27 @@ void mra_get_connection_server_cb(PurpleUtilFetchUrlData *url_data, gpointer dat
     UNUSED(url_data);
     UNUSED(len);
     UNUSED(error_message);
-    
+
     gchar **srv = NULL;
     gchar *server = NULL;
     int port = 0;
-    
+
     mra_serv_conn *mmp = data;
     g_return_if_fail(mmp != NULL);
 
     PurpleAccount *acct = mmp->acct;
     g_return_if_fail(acct != NULL);
-        
+
     PurpleConnection *gc = mmp->gc;
     g_return_if_fail(gc != NULL);
-        
+
     if (!url_text) {
         purple_debug_info("mra", "[%s] failed to get server to connect to\n", __func__);
                                                                                         /* FIXME */
         purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Connection problem"));
         return;
     }
-        
+
     purple_debug_info("mra", "[%s] server to connect to: '%s'\n", __func__, url_text);  /* FIXME */
 
     srv = g_strsplit(url_text, ":", 2);
@@ -110,9 +110,9 @@ void mra_get_connection_server_cb(PurpleUtilFetchUrlData *url_data, gpointer dat
     port = atoi(srv[1]);
 
     mmp->connect_data = purple_proxy_connect(gc, acct, server, port, mra_connect_cb, gc);
-    if (mmp->connect_data == NULL) {   
+    if (mmp->connect_data == NULL) {
         purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Connection problem"));
-    }                                                                                                                                                                                                                                                                                                               
+    }
 
     g_strfreev(srv);
     g_free(server);
@@ -150,21 +150,21 @@ void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const g
     buddy = data;
     g_return_if_fail(buddy != NULL);
     g_return_if_fail(buddy->name != NULL);
-    
+
     // check email by purple
     if (!purple_email_is_valid(buddy->name)) {
-        purple_debug_info("mra", "[%s] user is invalid: %s (%s)\n", __func__, buddy->name, buddy->alias);  
+        purple_debug_info("mra", "[%s] user is invalid: %s (%s)\n", __func__, buddy->name, buddy->alias);
                                                                                         /* FIXME */
         return;
     }
-    
-    purple_debug_info("mra", "[%s] downloaded avatar for user %s\n", __func__, buddy->name);   
+
+    purple_debug_info("mra", "[%s] downloaded avatar for user %s\n", __func__, buddy->name);
                                                                                         /* FIXME */
-    
+
     if (error_message) {
         purple_debug_info("mra", "[%s] error: %s\n", __func__, error_message);          /* FIXME */
     }
-    
+
     purple_debug_info("mra", "[%s] downloaded: %" G_GSIZE_FORMAT " bytes\n", __func__, len);
                                                                                         /* FIXME */
 
@@ -172,7 +172,7 @@ void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const g
         purple_debug_info("mra", "[%s] failed to download avatar for %s\n", __func__, buddy->name);
                                                                                         /* FIXME */
         return;
-    }   
+    }
 
     account = purple_buddy_get_account(buddy);
     g_return_if_fail(account != NULL);
@@ -185,7 +185,7 @@ void mra_load_avatar_cb(PurpleUtilFetchUrlData *url_data, gpointer data, const g
 **************************************************************************************************/
 void mra_load_avatar(gpointer data, const char *email) {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-    
+
     PurpleBuddy *buddy;
     mra_serv_conn *mmp;
     gchar **eml = NULL;
@@ -194,12 +194,12 @@ void mra_load_avatar(gpointer data, const char *email) {
 
     mmp = data;
     g_return_if_fail(mmp != NULL);
-    
+
     buddy = purple_find_buddy(mmp->acct, email);
     g_return_if_fail(buddy != NULL);
 
     purple_debug_info("mra", "[%s] find avatar for email: %s\n", __func__, email);      /* FIXME */
-    
+
     eml = g_strsplit(email, "@", 2);
     if (strcmp(eml[1], "corp.mail.ru") == 0) {
         domain = g_strdup("corp");
@@ -231,20 +231,20 @@ void mra_load_avatar(gpointer data, const char *email) {
 /**************************************************************************************************
     Set contact status
 **************************************************************************************************/
-void mra_contact_set_status(gpointer data, char *email, uint32_t status) 
+void mra_contact_set_status(gpointer data, char *email, uint32_t status)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
     mra_serv_conn *mmp = data;
     g_return_if_fail(mmp != NULL);
-    
+
     purple_debug_info("mra", "[%s] %s status: 0x%08x\n", __func__, email, status);      /* FIXME */
-    
+
     if (status & STATUS_FLAG_INVISIBLE) {
         purple_debug_info("mra", "[%s] %s status is invisible\n", __func__, email);     /* FIXME */
         purple_prpl_got_user_status(mmp->acct, email, MRA_STATUS_ID_INVISIBLE, NULL);
     }
-    
+
     switch (status & 0x7FFFFFFF) {
         case STATUS_OFFLINE:
             purple_debug_info("mra", "[%s] %s status is offline\n", __func__, email);   /* FIXME */
@@ -302,7 +302,7 @@ void mra_login_cb(gpointer data, uint32_t status, char *message)
 
     if (status != MRA_LOGIN_SUCCESSFUL) {
         purple_debug_error("mra", "[%s] got error\n", __func__);                        /* FIXME */
-    
+
         gchar *tmp;
         tmp = g_strdup_printf(_("Connection problem:\n%s"), message);
         purple_connection_error_reason(mmp->gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, tmp);
@@ -310,7 +310,7 @@ void mra_login_cb(gpointer data, uint32_t status, char *message)
 
         mra_close(mmp->gc);
     } else {
-        purple_connection_update_progress(mmp->gc, _("Connecting"), 3, 3); 
+        purple_connection_update_progress(mmp->gc, _("Connecting"), 3, 3);
         mmp->authorized = TRUE;
 
         purple_debug_info("mra", "mra_login is OK\n");                                  /* FIXME */
@@ -332,7 +332,7 @@ void mra_logout_cb(gpointer data, char *reason)
     const char *username = purple_account_get_username(mmp->acct);
 
     purple_debug_error("mra", "[%s] got reason: %s\n", __func__, reason);               /* FIXME */
-    
+
     gchar *tmp;
     tmp = g_strdup_printf(_("Account %s is used on another computer or device.\n"), username);
     purple_connection_error_reason(mmp->gc, PURPLE_CONNECTION_ERROR_NAME_IN_USE, tmp);
@@ -370,22 +370,22 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
     g_return_if_fail(mmp->groups              != NULL);
     g_return_if_fail(mmp->users               != NULL);
     g_return_if_fail(mmp->users_is_authorized != NULL);
-    
+
     mmp->groups_list   = groups;
     mmp->contacts_list = contacts;
 
     // proceed all groups
     for (i = 0; i < group_cnt; i++) {
-        purple_debug_info("mra", "[%s] group %s (%d)\n", 
+        purple_debug_info("mra", "[%s] group %s (%d)\n",
                           __func__, groups[i].name, groups[i].id);                      /* FIXME */
-        
+
         if (groups[i].removed || groups[i].name == NULL || *groups[i].name == '\0') {
             continue;
         }
-        
+
         // insert group into groups hash
         g_hash_table_insert(mmp->groups, g_strdup_printf("%d", groups[i].id), groups[i].name);
-        
+
         // add group into pidgin, if not exists
         if ((purple_find_group(groups[i].name)) == NULL) {
             g = purple_group_new(groups[i].name);
@@ -395,23 +395,26 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
 
     // proceed all users
     for (i = 0; i < contact_cnt; i++) {
-        purple_debug_info("mra", "[%s] user %s (%d)\n", 
+        purple_debug_info("mra", "[%s] user %s (%d)\n",
                           __func__, contacts[i].email, contacts[i].id);                 /* FIXME */
-        
+
         buddy = purple_find_buddy(mmp->acct, contacts[i].email);
-       
+
         if (contacts[i].removed || contacts[i].skip_user || contacts[i].email == NULL || *contacts[i].email == '\0') {
+            if (contacts[i].skip_user) {
+                continue;
+            }
             if (buddy != NULL) {
                 purple_blist_remove_buddy(buddy);
             }
             continue;
         }
-        
+
         if (!(contacts[i].intflags & CONTACT_INTFLAG_NOT_AUTHORIZED)) {
             g_hash_table_insert(mmp->users_is_authorized, contacts[i].email, "TRUE");
             purple_debug_info("mra", "[%s] users_is_authorized = %s\n", __func__, contacts[i].email);             /* FIXME */
         }
-        
+
         g_hash_table_insert(mmp->users, contacts[i].email, g_strdup_printf("%d", contacts[i].id));
 
         // add user into pidgin, if user not found
@@ -458,7 +461,7 @@ void mra_contact_list_cb(gpointer data, uint32_t status, size_t group_cnt, mra_g
 void mra_user_status_cb(gpointer data, char *email, uint32_t status)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-    
+
     mra_serv_conn *mmp = data;
     g_return_if_fail(mmp != NULL);
 
@@ -480,7 +483,7 @@ void mra_auth_request_add_cb(gpointer data)
     mra_net_send_authorize_user(auth_request->mmp, auth_request->email);
     // send 'add user into group' packet. group = 0 <- TODO (is it neccecary?)
     mra_net_send_add_user(auth_request->mmp, auth_request->email, auth_request->email, 0, 0);
-    
+
     g_free(auth_request->email);
     g_free(auth_request);
 }
@@ -532,7 +535,7 @@ void mra_typing_notify_cb(gpointer data, char *from)
     mra_serv_conn *mmp = data;
     g_return_if_fail(mmp     != NULL);
     g_return_if_fail(mmp->gc != NULL);
-    
+
     serv_got_typing(mmp->gc, from, TYPING_TIMEOUT, PURPLE_TYPING);
 }
 
@@ -570,7 +573,7 @@ void mra_message_cb(gpointer data, char *from, char *message, char *message_rtf,
 
     UNUSED(message_rtf);
     UNUSED(type);
-    
+
     mra_serv_conn *mmp = data;
     g_return_if_fail(mmp       != NULL);
     g_return_if_fail(mmp->acct != NULL);
@@ -583,7 +586,7 @@ void mra_message_cb(gpointer data, char *from, char *message, char *message_rtf,
     conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, from, mmp->acct);
     if (conv) {
         purple_debug_info("mra", "[%s] conversation was found\n", __func__);            /* FIXME */
-        
+
         purple_conversation_set_name(conv, from);
     } else {
         purple_debug_info("mra", "[%s] conversation not found\n", __func__);            /* FIXME */
@@ -602,8 +605,8 @@ void mra_connect_result(gpointer data, gint status, char *error)
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
     UNUSED(data);
-    
-    purple_debug_error("mra", "[%s] connect result: %d (%s)\n", 
+
+    purple_debug_error("mra", "[%s] connect result: %d (%s)\n",
                        __func__, status, error);                                        /* FIXME */
 }
 
@@ -625,7 +628,7 @@ void mra_connect_cb(gpointer data, gint source, const gchar *error_message)
 
     // Don't need to cancel connection any more since it is established.
     mmp->connect_data = NULL;
-        
+
     // return error if connection is invalid
     if (!PURPLE_CONNECTION_IS_VALID(gc)) {
         purple_debug_error("mra", "purple connection is invalid\n");                    /* FIXME */
@@ -637,7 +640,7 @@ void mra_connect_cb(gpointer data, gint source, const gchar *error_message)
     if (source < 0) {
         purple_debug_error("mra", "source < 0\n");
         gchar *tmp;
-        tmp = g_strdup_printf(_("Could not establish a connection with the server:\n%s"), 
+        tmp = g_strdup_printf(_("Could not establish a connection with the server:\n%s"),
                               error_message);
         purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, tmp);
         g_free(tmp);
@@ -647,15 +650,15 @@ void mra_connect_cb(gpointer data, gint source, const gchar *error_message)
     // fill proto data
     mmp->fd = source;
     mmp->connected = TRUE;
-    mmp->name = g_strdup_printf("%s:%d", 
-                                purple_account_get_string(gc->account, "host", MRA_HOST), 
+    mmp->name = g_strdup_printf("%s:%d",
+                                purple_account_get_string(gc->account, "host", MRA_HOST),
                                 purple_account_get_int(gc->account, "port", MRA_PORT));
 
     purple_connection_set_display_name(gc, username);
     purple_connection_set_state(gc, PURPLE_CONNECTED);
     purple_debug_info("mra", "[%s] Connected\n", __func__);                             /* FIXME */
     purple_debug_info("mra", "[%s] Trying to login user...\n", __func__);               /* FIXME */
-    
+
     // set handler for incoming data
     mmp->tx_handler = purple_input_add(mmp->fd, PURPLE_INPUT_READ, (PurpleInputFunction) mra_net_read_cb, mmp);
 
@@ -692,11 +695,11 @@ int mra_send_im(PurpleConnection *gc, const char *to, const char *message, Purpl
 
     char *message_plain = purple_unescape_html(message);
     gboolean ret = FALSE;
-    
+
     purple_debug_info("mra", "[%s] send message {%s} to {%s}\n", __func__, message, to);/* FIXME */
 
     ret = mra_net_send_message(mmp, to, message_plain, 0);
-    
+
     g_free(message_plain);
 
     if (ret) {
@@ -743,12 +746,12 @@ unsigned int mra_send_typing(PurpleConnection *gc, const char *to, PurpleTypingS
 /**************************************************************************************************
     Set status
 **************************************************************************************************/
-void mra_set_status(PurpleAccount *acct, PurpleStatus *status) 
+void mra_set_status(PurpleAccount *acct, PurpleStatus *status)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
     g_return_if_fail(acct != NULL);
-    
+
     PurpleConnection *gc = purple_account_get_connection(acct);
     g_return_if_fail(gc != NULL);
 
@@ -785,7 +788,7 @@ void mra_set_status(PurpleAccount *acct, PurpleStatus *status)
 void mra_add_buddy_ok_cb(mra_add_buddy_req *data, char *msg)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-    
+
     PurpleConnection *pc;
     PurpleBuddy *buddy;
     PurpleGroup *group;
@@ -809,10 +812,10 @@ void mra_add_buddy_ok_cb(mra_add_buddy_req *data, char *msg)
     if (mmp == NULL || mmp->users_is_authorized == NULL) {
         return;
     }
-    
+
     email = strdup(purple_buddy_get_name(buddy));
     alias = strdup(purple_buddy_get_alias(buddy));
-    
+
     if (g_hash_table_lookup(mmp->users_is_authorized, email) == NULL) {
         g_hash_table_insert(mmp->users_is_authorized, email, "TRUE");
         purple_debug_info("mra", "[%s] users_is_authorized = %s\n", __func__, email);             /* FIXME */
@@ -835,7 +838,7 @@ void mra_add_buddy_cancel_cb(mra_add_buddy_req *data, char *msg)
     UNUSED(msg);
 
     g_return_if_fail(data != NULL);
-    
+
     // Remove from local list
     purple_blist_remove_buddy(data->buddy);
 
@@ -848,7 +851,7 @@ void mra_add_buddy_cancel_cb(mra_add_buddy_req *data, char *msg)
 void mra_add_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *group)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-    
+
     const char *email;
     mra_add_buddy_req *data;
 
@@ -856,12 +859,12 @@ void mra_add_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *group)
         return;
     }
     if (buddy == NULL) {
-        purple_debug_info("mra", "[%s] I can't add user because I have no buddy!\n", __func__);             
+        purple_debug_info("mra", "[%s] I can't add user because I have no buddy!\n", __func__);
                                                                                         /* FIXME */
         return;
     }
     if (group == NULL) {
-        purple_debug_info("mra", "[%s] I can't add user because I have no group!\n", __func__);             
+        purple_debug_info("mra", "[%s] I can't add user because I have no group!\n", __func__);
                                                                                         /* FIXME */
         return;
     }
@@ -880,7 +883,7 @@ void mra_add_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *group)
         purple_blist_remove_buddy(buddy);
 
         return;
-    }    
+    }
 
     data = g_new0(mra_add_buddy_req, 1);
     data->pc = gc;
@@ -902,10 +905,10 @@ void mra_remove_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *gro
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
     UNUSED(group);
-    
+
     g_return_if_fail(gc    != NULL);
     g_return_if_fail(buddy != NULL);
-    
+
     mra_serv_conn *mmp = gc->proto_data;
     gpointer buddy_user_id;
     uint32_t user_id;
@@ -918,25 +921,25 @@ void mra_remove_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *gro
 
     email = (char *) purple_buddy_get_name(buddy);
     if (email == NULL) {
-        purple_debug_info("mra", "[%s] I can't remove user because I can't find email!\n", __func__);             
+        purple_debug_info("mra", "[%s] I can't remove user because I can't find email!\n", __func__);
                                                                                         /* FIXME */
         return;
     }
     name  = (char *) purple_buddy_get_alias(buddy);
     if (name == NULL) {
-        purple_debug_info("mra", "[%s] I can't remove user because I can't find name!\n", __func__);             
+        purple_debug_info("mra", "[%s] I can't remove user because I can't find name!\n", __func__);
                                                                                         /* FIXME */
         return;
     }
     buddy_user_id = g_hash_table_lookup(mmp->users, email);
     if (buddy_user_id == NULL) {
-        purple_debug_info("mra", "[%s] I can't remove user because I can't find user_id!\n", __func__);             
+        purple_debug_info("mra", "[%s] I can't remove user because I can't find user_id!\n", __func__);
                                                                                         /* FIXME */
         return;
     }
     user_id = atol(buddy_user_id);
-    
-    purple_debug_info("mra", "[%s] Remove user %s (%s), user_id: %d\n", 
+
+    purple_debug_info("mra", "[%s] Remove user %s (%s), user_id: %d\n",
                       __func__, email, name, user_id);                                  /* FIXME */
 
     mra_net_send_change_user(mmp, user_id, group_id, email, name, CONTACT_FLAG_REMOVED);
@@ -952,7 +955,7 @@ void mra_alias_buddy(PurpleConnection *gc, const char *name, const char *alias)
 
     g_return_if_fail(gc    != NULL);
     g_return_if_fail(alias != NULL);
-    
+
     mra_serv_conn *mmp = gc->proto_data;
     PurpleBuddy *buddy;
     gpointer buddy_user_id;
@@ -965,20 +968,20 @@ void mra_alias_buddy(PurpleConnection *gc, const char *name, const char *alias)
 
     buddy = purple_find_buddy(mmp->acct, name);
     if (buddy == NULL) {
-        purple_debug_info("mra", "[%s] I can't rename buddy because I can't find name!\n", __func__);             
+        purple_debug_info("mra", "[%s] I can't rename buddy because I can't find name!\n", __func__);
                                                                                         /* FIXME */
         return;
     }
-    
+
     buddy_user_id = g_hash_table_lookup(mmp->users, name);
     if (buddy_user_id == NULL) {
-        purple_debug_info("mra", "[%s] I can't remove user because I can't find user_id!\n", __func__);             
+        purple_debug_info("mra", "[%s] I can't remove user because I can't find user_id!\n", __func__);
                                                                                         /* FIXME */
         return;
     }
     user_id = atol(buddy_user_id);
-    
-    purple_debug_info("mra", "[%s] Rename user %s (%d) to '%s'\n", 
+
+    purple_debug_info("mra", "[%s] Rename user %s (%d) to '%s'\n",
                       __func__, name, user_id, alias);                                    /* FIXME */
 
 //    purple_blist_alias_buddy(buddy, alias);
@@ -1012,18 +1015,18 @@ void mra_login(PurpleAccount *acct)
     const char *username = NULL;
 
     g_return_if_fail(acct != NULL);
-    
+
     PurpleConnection *gc = purple_account_get_connection(acct);
     g_return_if_fail(gc != NULL);
-    
+
     username = purple_account_get_username(acct);
 
     mra_serv_conn *mmp;
 
     purple_debug_info("mra", "[%s] Try to connect to server\n", __func__);              /* FIXME */
 
-    gc->proto_data = mmp = g_new0(mra_serv_conn, 1); 
-    mmp->fd = -1; 
+    gc->proto_data = mmp = g_new0(mra_serv_conn, 1);
+    mmp->fd = -1;
     mmp->gc = gc;
     mmp->acct = acct;
     mmp->connected = FALSE;
@@ -1037,11 +1040,11 @@ void mra_login(PurpleAccount *acct)
     mmp->tx_handler = 0;
     mmp->rx_buf = (char *) malloc(MRA_BUF_LEN + 1);
     mmp->rx_len = 0;
-    
+
     mmp->groups_list   = NULL;
     mmp->contacts_list = NULL;
-	
-    purple_connection_update_progress(gc, _("Connecting"), 1, 3); 
+
+    purple_connection_update_progress(gc, _("Connecting"), 1, 3);
 
     server = g_strdup(purple_account_get_string(acct, "host", MRA_HOST));
     port   = purple_account_get_int(acct,    "port", MRA_PORT);
@@ -1051,16 +1054,16 @@ void mra_login(PurpleAccount *acct)
         purple_debug_error("mra", "[%s] email '%s' is invalid\n", __func__, username);  /* FIXME */
         purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_INVALID_SETTINGS, _("Username is invalid"));
     } else if (strcmp(server, "mrim.mail.ru") == 0) {
-        purple_debug_info("mra", "[%s] Get server to connect to: %s:%u\n", __func__, server, port);              
+        purple_debug_info("mra", "[%s] Get server to connect to: %s:%u\n", __func__, server, port);
                                                                                         /* FIXME */
         mra_get_connection_server(mmp, server, port);
     } else {
         purple_debug_info("mra", "[%s] Connect directly to server %s:%u\n", __func__, server, port);
                                                                                         /* FIXME */
         mmp->connect_data = purple_proxy_connect(gc, acct, server, port, mra_connect_cb, gc);
-        if (mmp->connect_data == NULL) {   
+        if (mmp->connect_data == NULL) {
             purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_NETWORK_ERROR, _("Connection problem"));
-        }                                                                                                                                                                                                                                                                                                               
+        }
     }
     g_free(server);
 }
@@ -1123,7 +1126,7 @@ void mra_close(PurpleConnection *gc)
 **************************************************************************************************/
 void mra_rerequest_auth(PurpleBlistNode *node, gpointer ignored) {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-    
+
     UNUSED(ignored);
 
     PurpleBuddy *buddy;
@@ -1132,10 +1135,10 @@ void mra_rerequest_auth(PurpleBlistNode *node, gpointer ignored) {
     mra_serv_conn *mmp;
     const char *email;
     mra_add_buddy_req *data;
-    
+
     buddy = (PurpleBuddy *) node;
     g_return_if_fail(buddy != NULL);
-    
+
     group = purple_buddy_get_group(buddy);
     g_return_if_fail(group != NULL);
 
@@ -1172,7 +1175,7 @@ GList *mra_buddy_menu(PurpleBuddy *buddy) {
     char *email;
     char *authorized;
     char *user_id;
-    
+
     g_return_val_if_fail(buddy != NULL, NULL);
 
     gc = purple_account_get_connection(purple_buddy_get_account(buddy));
@@ -1188,15 +1191,15 @@ GList *mra_buddy_menu(PurpleBuddy *buddy) {
     email = (char *) purple_buddy_get_name(buddy);
     authorized = g_hash_table_lookup(mmp->users_is_authorized, email);
     user_id = g_hash_table_lookup(mmp->users, email);
-    
+
     if (authorized == NULL && user_id == NULL) {
         purple_debug_info("mra", "[%s] user %s is not authorized\n", __func__, email);  /* FIXME */
-        
+
         act = purple_menu_action_new(_("Re-request Authorization"), PURPLE_CALLBACK(mra_rerequest_auth), NULL, NULL);
         menu = g_list_prepend(menu, act);
     }
     menu = g_list_reverse(menu);
-        
+
     return menu;
 }
 
@@ -1205,7 +1208,7 @@ GList *mra_buddy_menu(PurpleBuddy *buddy) {
 **************************************************************************************************/
 GList *mra_blist_node_menu(PurpleBlistNode *node) {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-    
+
     if (PURPLE_BLIST_NODE_IS_BUDDY(node)) {
         return mra_buddy_menu((PurpleBuddy *) node);
     } else {
@@ -1222,26 +1225,26 @@ GList *mra_statuses(PurpleAccount *acct)
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
 
     UNUSED(acct);
-	
+
     GList *types = NULL;
 	PurpleStatusType *status;
-	
-	//Online people have a status message and also a date when it was set	
+
+	//Online people have a status message and also a date when it was set
 	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AVAILABLE, "ONLINE", _("Online"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
 	types  = g_list_append(types, status);
-	
-	//Away people have a status message and also a date when it was set	
+
+	//Away people have a status message and also a date when it was set
 	status = purple_status_type_new_with_attrs(PURPLE_STATUS_AWAY, "AWAY", _("Away"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
 	types  = g_list_append(types, status);
-	
-	//Unavailable people have a status message and also a date when it was set	
+
+	//Unavailable people have a status message and also a date when it was set
 	status = purple_status_type_new_with_attrs(PURPLE_STATUS_UNAVAILABLE, "UNAVIALABLE", _("Unavailable"), FALSE, TRUE, FALSE, "message", _("Message"), purple_value_new(PURPLE_TYPE_STRING), "message_date", _("Message changed"), purple_value_new(PURPLE_TYPE_STRING), NULL);
 	types  = g_list_append(types, status);
-	
+
 	//Offline people dont have messages
 	status = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, "OFFLINE", _("Offline"), FALSE, TRUE, FALSE);
 	types  = g_list_append(types, status);
-	
+
 	return types;
 }
 
@@ -1295,13 +1298,13 @@ GList *mra_actions(PurplePlugin *plugin, gpointer context)
 
     UNUSED(plugin);
     UNUSED(context);
-	
+
     GList *m = NULL;
 //	PurplePluginAction *act;
 
 //	act = purple_plugin_action_new(_("Set Mail.ru Agent status..."), mra_set_status_cb);
 //	m = g_list_append(m, act);
-	
+
 	return m;
 }
 
@@ -1328,7 +1331,7 @@ const char *mra_list_emblem(PurpleBuddy *buddy)
     char *email;
     char *authorized;
     char *user_id;
-    
+
     g_return_val_if_fail(buddy != NULL, NULL);
 
     gc = purple_account_get_connection(purple_buddy_get_account(buddy));
@@ -1343,15 +1346,15 @@ const char *mra_list_emblem(PurpleBuddy *buddy)
     email = (char *) purple_buddy_get_name(buddy);
     authorized = g_hash_table_lookup(mmp->users_is_authorized, email);
     user_id = g_hash_table_lookup(mmp->users, email);
-    
-    purple_debug_info("mra", "[%s] get %s emblem: %s, id: %s\n", __func__, email, authorized, user_id);                 
+
+    purple_debug_info("mra", "[%s] get %s emblem: %s, id: %s\n", __func__, email, authorized, user_id);
                                                                                         /* FIXME */
 
     if (authorized == NULL && user_id == NULL) {
         purple_debug_info("mra", "[%s] user %s is not authorized\n", __func__, email);  /* FIXME */
         return "not-authorized";
     }
-        
+
     return NULL;
 }
 
@@ -1361,22 +1364,22 @@ const char *mra_list_emblem(PurpleBuddy *buddy)
 char *mra_status_text(PurpleBuddy *buddy)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-	
+
     PurplePresence *presence;
 	PurpleStatus *status;
     char *text;
     char *tmp;
-	
+
     g_return_val_if_fail(buddy != NULL, NULL);
-    
+
 	presence = purple_buddy_get_presence(buddy);
     g_return_val_if_fail(presence != NULL, NULL);
-	
+
     status = purple_presence_get_active_status(presence);
     g_return_val_if_fail(status != NULL, NULL);
 
     tmp = purple_utf8_salvage(purple_status_get_name(status));
-    text = g_markup_escape_text(tmp, -1); 
+    text = g_markup_escape_text(tmp, -1);
     g_free(tmp);
 
     return text;
@@ -1412,7 +1415,7 @@ gboolean plugin_unload(PurplePlugin *plugin)
 static GHashTable * mra_get_account_text_table(PurpleAccount *acct)
 {
     purple_debug_info("mra", "== %s ==\n", __func__);                                   /* FIXME */
-    
+
     UNUSED(acct);
 
     GHashTable *table;
