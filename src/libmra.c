@@ -693,7 +693,7 @@ int mra_send_im(PurpleConnection *gc, const char *to, const char *message, Purpl
     mra_serv_conn *mmp = gc->proto_data;
     g_return_val_if_fail(mmp != NULL, 0);
 
-    char *message_plain = purple_markup_strip_html(purple_unescape_html(message));
+    char *message_plain = purple_unescape_html(message);
     gboolean ret = FALSE;
 
     purple_debug_info("mra", "[%s] send message {%s} to {%s}\n", __func__, message, to);/* FIXME */
