@@ -871,6 +871,7 @@ void mra_add_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *group)
 
     email = purple_buddy_get_name(buddy);
 
+/*
     if (!mra_email_is_valid(email)) {
         gchar *buf;
         buf = g_strdup_printf(_("Unable to add the buddy %s because the username is invalid.  Usernames must be valid email addresses."), email);
@@ -884,6 +885,7 @@ void mra_add_buddy(PurpleConnection *gc, PurpleBuddy *buddy, PurpleGroup *group)
 
         return;
     }
+*/
 
     data = g_new0(mra_add_buddy_req, 1);
     data->pc = gc;
@@ -1049,11 +1051,14 @@ void mra_login(PurpleAccount *acct)
     server = g_strdup(purple_account_get_string(acct, "host", MRA_HOST));
     port   = purple_account_get_int(acct,    "port", MRA_PORT);
 
+/*
     // return error if username is invalid
     if (!mra_email_is_valid(username)) {
-        purple_debug_error("mra", "[%s] email '%s' is invalid\n", __func__, username);  /* FIXME */
+        purple_debug_error("mra", "[%s] email '%s' is invalid\n", __func__, username);
         purple_connection_error_reason(gc, PURPLE_CONNECTION_ERROR_INVALID_SETTINGS, _("Username is invalid"));
     } else if (strcmp(server, "mrim.mail.ru") == 0) {
+*/
+    if (strcmp(server, "mrim.mail.ru") == 0) {
         purple_debug_info("mra", "[%s] Get server to connect to: %s:%u\n", __func__, server, port);
                                                                                         /* FIXME */
         mra_get_connection_server(mmp, server, port);
