@@ -89,6 +89,7 @@ gboolean mra_net_ping_timeout_cb(mra_serv_conn *);
 gboolean mra_net_send_ping(mra_serv_conn *);
 gboolean mra_net_send_hello(mra_serv_conn *);
 gboolean mra_net_send_auth(mra_serv_conn *, const char *, const char *, uint32_t);
+gboolean mra_net_send_device_id(mra_serv_conn *, const char*);
 gboolean mra_net_send_receive_ack(mra_serv_conn *, char *, uint32_t);
 gboolean mra_net_send_message(mra_serv_conn *, const char *, const char *, uint32_t);
 gboolean mra_net_send_typing(mra_serv_conn *, const char *);

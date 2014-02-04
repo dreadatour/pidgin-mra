@@ -342,6 +342,34 @@ gboolean mra_net_send_auth(mra_serv_conn *mmp, const char *username, const char 
 }
 
 /**************************************************************************************************
+    Send 'capabilities: device id' packet
+**************************************************************************************************/
+
+gboolean mra_net_send_device_id(mra_serv_conn *mmp, const char* device_id)
+{
+    purple_debug_info("mra", "== %s - %s ==\n", __func__, device_id);
+
+    mrim_packet_header_t head;
+    char *dev_id_lps = mra_net_mklps(device_id);
+    uint32_t tag = MRIM_CAPABILITY_DEVICE_ID;
+    uint32_t tlv_count = 1;
+
+    gboolean ret = FALSE;
+
+    mra_net_fill_cs_header(&head, mmp->seq++, MRIM_CS_CAPABILITIES, LPSSIZE(dev_id_lps) + sizeof(tag)+sizeof(tlv_count));
+    mra_net_send(mmp, &head, sizeof(head));
+    mra_net_send(mmp, &tlv_count, sizeof(tlv_count)); 
+    mra_net_send(mmp, &tag, sizeof(tag));
+    mra_net_send(mmp, dev_id_lps, LPSSIZE(dev_id_lps));
+
+    ret = mra_net_send_flush(mmp);
+
+    g_free(dev_id_lps);
+
+    return ret;
+}
+
+/**************************************************************************************************
     Send 'receive ack' packet
 **************************************************************************************************/
 gboolean mra_net_send_receive_ack(mra_serv_conn *mmp, char *from, uint32_t msg_id)
