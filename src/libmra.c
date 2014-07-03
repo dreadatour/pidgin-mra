@@ -1281,6 +1281,7 @@ void mra_anketa_info_cb(gpointer data, const char *who, mra_anketa_info *anketa)
 	purple_notify_user_info_add_section_break(user_info);
 	purple_notify_user_info_prepend_pair(user_info, "Phone", anketa->phone);
 	purple_notify_user_info_prepend_pair(user_info, "Location", anketa->location);
+	purple_notify_user_info_prepend_pair(user_info, "Zodiac sign", ((anketa->zodiak == 1) ? "The Ram" : (anketa->zodiak == 2) ? "The Bull" : (anketa->zodiak == 3) ? "The Twins" : (anketa->zodiak == 4) ? "The Crab" : (anketa->zodiak == 5) ? "The Lion" : (anketa->zodiak == 6) ? "The Virgin" : (anketa->zodiak == 7) ? "The Balance" : (anketa->zodiak == 8) ? "The Scorpion" : (anketa->zodiak == 9) ? "The Archer" : (anketa->zodiak == 10) ? "The Capricorn" : (anketa->zodiak == 11) ? "The Water-bearer" : (anketa->zodiak == 12) ? "The Fish" : "" ));
 	purple_notify_user_info_prepend_pair(user_info, "Birthday", anketa->birthday);
 	purple_notify_user_info_prepend_pair(user_info, "Sex", ((anketa->sex == 1) ? "Male" : (anketa->sex == 2) ? "Female" : "" ));
 	purple_notify_user_info_prepend_pair(user_info, "Lastname", anketa->lastname);
