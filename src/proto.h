@@ -234,6 +234,18 @@ typedef struct _mrim_packet_header_t {
     //+ statistic packet data: 
     // LPS client description //max 256
 
+#define MRIM_CS_CAPABILITIES            0x1090  // C -> S
+// DWORD capabilities_quantity
+// TLV  settings[]
+   #define MRIM_CAPABILITY_ONLINE_ALERTS   0
+   #define MRIM_CAPABILITY_OFFLINE_ALERTS  1
+   #define MRIM_CAPABILITY_WEBRTC          2
+   #define MRIM_CAPABILITY_WEBRTC_BUSY     3
+   #define MRIM_CAPABILITY_ARCH            4
+   #define MRIM_CAPABILITY_NORTF           5
+   #define MRIM_CAPABILITY_DEVICE_ID       6
+   #define MRIM_CAPABILITY_ARCH_STATES     41
+
 typedef struct mrim_connection_params_t {
 	unsigned long	ping_period;
 } mrim_connection_params_t;

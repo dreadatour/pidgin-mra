@@ -287,6 +287,9 @@ void mra_hello_cb(gpointer data)
     purple_connection_update_progress(mmp->gc, _("Connecting"), 3, 3);
 
     mra_net_send_auth(mmp, username, password, status);
+
+    const char *device_id = purple_account_get_string(mmp->acct, "dev_id", "");
+    mra_net_send_device_id(mmp, device_id);
 }
 
 /**************************************************************************************************
@@ -1006,6 +1009,56 @@ void mra_get_anketa(PurpleConnection *gc, const char *who)
 }
 
 /**************************************************************************************************
+    Check && Generate device id
+**************************************************************************************************/
+const char* mra_generate_device_id()
+{
+#define MRA_UUID_LEN 125
+    static char buf[MRA_UUID_LEN];
+    int fd = open("/proc/sys/kernel/random/uuid", O_RDONLY);
+    if (fd == -1)
+    {
+        purple_debug_info("mra", "%s failed open uuid file: %s", __func__, strerror(errno));
+        return NULL;
+    }
+
+    ssize_t len = 0;
+    ssize_t r = 0;
+    while (r = read(fd, buf + len, sizeof(buf) - len))
+    {
+        if (r == -1)
+        {
+            purple_debug_info("mra", "%s failed read uuid file: %s", __func__, strerror(errno));
+            return NULL;
+        }
+
+        len += r;
+    }
+
+    buf[len - 1] = '\0'; // last symbol is \n - not needed
+    return buf;
+}
+
+void mra_check_device_id(PurpleAccount *acct)
+{
+    const char* device_id = purple_account_get_string(acct, "dev_id", "");
+    if (device_id[0] != '\0')
+    {
+        purple_debug_info("mra", "%s device id %s", __func__, device_id);
+        return;
+    }
+
+    device_id = mra_generate_device_id();
+    if (!device_id)
+    {
+        purple_debug_error("mra", "%s Failed to generate device id, will continue without it!", __func__);
+        return;
+    }
+    
+    purple_account_set_string(acct, "dev_id", device_id);
+}
+
+/**************************************************************************************************
     Connect to server
 **************************************************************************************************/
 void mra_login(PurpleAccount *acct)
@@ -1051,6 +1104,8 @@ void mra_login(PurpleAccount *acct)
     server = g_strdup(purple_account_get_string(acct, "host", MRA_HOST));
     port   = purple_account_get_int(acct,    "port", MRA_PORT);
 
+    mra_check_device_id(acct);
+            
 /*
     // return error if username is invalid
     if (!mra_email_is_valid(username)) {
@@ -1532,6 +1587,10 @@ static void plugin_init(PurplePlugin *plugin)
 
 //  user defined variable: port to connect (2041)
 	option = purple_account_option_int_new(_("Port"), "port", MRA_PORT);
+	prpl_info->protocol_options = g_list_append(prpl_info->protocol_options, option);
+
+//  auto generated device id
+	option = purple_account_option_string_new(_("Device ID"), "dev_id", "");
 	prpl_info->protocol_options = g_list_append(prpl_info->protocol_options, option);
 }
 
