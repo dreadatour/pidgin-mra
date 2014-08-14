@@ -63,7 +63,7 @@ gboolean mra_email_is_valid(const char *email)
     }
 
     // check domain
-    if (ret && strcmp(eml[1], "mail.ru") != 0 && strcmp(eml[1], "list.ru") != 0 && strcmp(eml[1], "inbox.ru") != 0 && strcmp(eml[1], "bk.ru") != 0 && strcmp(eml[1], "corp.mail.ru") != 0 && strcmp(eml[1], "chat.agent") != 0) {
+    if (ret && strcmp(eml[1], "mail.ru") != 0 && strcmp(eml[1], "inbox.ru") != 0 && strcmp(eml[1], "list.ru") != 0 && strcmp(eml[1], "bk.ru") != 0 && strcmp(eml[1], "mail.ua") != 0 && strcmp(eml[1], "corp.mail.ru") != 0 && strcmp(eml[1], "chat.agent") != 0) {
         ret = FALSE;
         purple_debug_info("mra", "[%s] failed check 'allowed domains'\n", __func__);    /* FIXME */
     }
@@ -211,6 +211,8 @@ void mra_load_avatar(gpointer data, const char *email) {
         domain = g_strdup("inbox");
     } else if (strcmp(eml[1], "bk.ru") == 0) {
         domain = g_strdup("bk");
+    } else if (strcmp(eml[1], "mail.ua") == 0) {
+    	domain = g_strdup("mailua");
     } else {
         purple_debug_info("mra", "[%s] unknown email domain: %s\n", __func__, eml[1]);  /* FIXME */
         g_strfreev(eml);
