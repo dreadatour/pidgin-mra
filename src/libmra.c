@@ -211,6 +211,8 @@ void mra_load_avatar(gpointer data, const char *email) {
         domain = g_strdup("inbox");
     } else if (strcmp(eml[1], "bk.ru") == 0) {
         domain = g_strdup("bk");
+    } else if (strcmp(eml[1], "uin.icq") == 0) {
+        domain = g_strdup("uin");
     } else {
         purple_debug_info("mra", "[%s] unknown email domain: %s\n", __func__, eml[1]);  /* FIXME */
         g_strfreev(eml);
