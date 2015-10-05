@@ -47,7 +47,7 @@ char *debug_data(char *data, size_t len) {
     if (len < 44) {
         buffer = (char * ) malloc(2 * len + 1);
         for (i = 0; i < len; i++) {
-            sprintf(buffer + 2 * i + 8, "%02x", (unsigned char) data[i]);
+            sprintf(buffer + 2 * i, "%02x", (unsigned char) data[i]);
         }
     } else {
         size_t edge = len - 44;
